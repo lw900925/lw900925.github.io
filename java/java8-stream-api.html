@@ -1,0 +1,1025 @@
+<!doctype html>
+
+
+
+
+<html class="theme-next pisces" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="java8">
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0">
+
+
+
+
+
+
+<meta name="description" content="本篇介绍Java 8的另一个新特性——Stream API。新增的Stream API与InputStream和OutputStream是完全不同的概念，Stream API是对Java中集合操作的增强，可以利用它进行各种过滤、排序、分组、聚合等操作。 Stream API配合Lambda表达式可以加大的简化代码，提升可读性。Stream API也支持并行操作（类似于Fork-Join），甚至不">
+<meta name="keywords" content="java8">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java 8新特性（二）：Stream API">
+<meta property="og:url" content="https://lw900925.github.io/java/java8-stream-api.html">
+<meta property="og:site_name" content="余斗 阝日">
+<meta property="og:description" content="本篇介绍Java 8的另一个新特性——Stream API。新增的Stream API与InputStream和OutputStream是完全不同的概念，Stream API是对Java中集合操作的增强，可以利用它进行各种过滤、排序、分组、聚合等操作。 Stream API配合Lambda表达式可以加大的简化代码，提升可读性。Stream API也支持并行操作（类似于Fork-Join），甚至不">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://raw.githubusercontent.com/lw900925/blog-asset/master/images/banner/java8-logo.jpeg">
+<meta property="og:updated_time" content="2021-08-09T04:02:20.017Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Java 8新特性（二）：Stream API">
+<meta name="twitter:description" content="本篇介绍Java 8的另一个新特性——Stream API。新增的Stream API与InputStream和OutputStream是完全不同的概念，Stream API是对Java中集合操作的增强，可以利用它进行各种过滤、排序、分组、聚合等操作。 Stream API配合Lambda表达式可以加大的简化代码，提升可读性。Stream API也支持并行操作（类似于Fork-Join），甚至不">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/lw900925/blog-asset/master/images/banner/java8-logo.jpeg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: false,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://lw900925.github.io/java/java8-stream-api.html">
+
+
+<meta name="baidu-site-verification" content="oso5Gb5GqD">
+<meta name="google-site-verification" content="4JxuSe7vpA5jMMjMwU5V4-VUcZTlFBK3DfJvxuzkJi8">
+
+  <title> Java 8新特性（二）：Stream API | 余斗 阝日 </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//tajs.qq.com/stats?sId=59930119";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">余斗 阝日</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">这个人很懒，什么都没写……</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="https://lw900925.github.io/java/java8-stream-api.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="大猫">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/uploads/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="余斗 阝日">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Java 8新特性（二）：Stream API
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2016-12-29T00:00:00+00:00">
+                2016-12-29
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/java/" itemprop="url" rel="index">
+                    <span itemprop="name">java</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p><img src="https://raw.githubusercontent.com/lw900925/blog-asset/master/images/banner/java8-logo.jpeg"></p>
+<p>本篇介绍Java 8的另一个新特性——Stream API。新增的Stream API与<code>InputStream</code>和<code>OutputStream</code>是完全不同的概念，Stream API是对Java中集合操作的增强，可以利用它进行各种过滤、排序、分组、聚合等操作。</p>
+<p>Stream API配合Lambda表达式可以加大的简化代码，提升可读性。Stream API也支持并行操作（类似于Fork-Join），甚至不用手动编写多线程代码，Stream API已经帮我们做好了，并且能充分利用多核CPU的优势。借助Stream API和Lambda表达式，可以很容易的编写出高性能的并发处理程序。</p>
+<a id="more"></a>
+<h2 id="Stream-API简介"><a href="#Stream-API简介" class="headerlink" title="Stream API简介"></a>Stream API简介</h2><p>Stream API是Java 8中加入的一套新的API，主要用于处理集合操作，不过它的处理方式与传统的方式不同，称为“数据流处理”。流（Stream）类似于关系数据库的查询操作，是一种声明式操作。比如要从数据库中获取所有年龄大于20岁的用户的名称，并按照用户的创建时间进行排序，用一条SQL语句就可以搞定，不过使用Java程序实现就会显得有些繁琐，这时候可以使用流：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">List&lt;String&gt; userNames =</span><br><span class="line">        users.stream()</span><br><span class="line">        .filter(user -&gt; user.getAge() &gt; <span class="number">20</span>)</span><br><span class="line">        .sorted(comparing(User::getCreationDate))</span><br><span class="line">        .map(User::getUserName)</span><br><span class="line">        .collect(toList());</span><br></pre></td></tr></table></figure>
+<p>可以把流跟集合做一个比较。在Java中，集合是一种数据结构，或者说是一种容器，用于存放数据，流不是容器，它不关心数据的存放，只关注如何处理。可以把流当做是Java中的<code>Iterator</code>，不过它可比<code>Iterator</code>强大多了。</p>
+<p>流与集合另一个区别在于他们的遍历方式，遍历集合通常使用<code>for-each</code>方式，这种方式称为<strong>外部迭代</strong>，而流使用<strong>内部迭代</strong>方式，也就是说它帮你把迭代的工作做了，你只需要给出一个函数来告诉它接下来要干什么：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 外部迭代</span></span><br><span class="line">List&lt;String&gt; list = Arrays.asList(<span class="string">"A"</span>, <span class="string">"B"</span>, <span class="string">"C"</span>, <span class="string">"D"</span>);</span><br><span class="line"><span class="keyword">for</span> (String str : list) &#123;</span><br><span class="line">    System.out.println(str);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 内部迭代</span></span><br><span class="line">list.stream().forEach(System.out::println);</span><br></pre></td></tr></table></figure>
+<p>在一些比较复杂的业务场景中，要对集合做一些统计、分组的操作，如果用传统的<code>for-each</code>方式遍历集合，每次只能处理一个元素，并且是按顺序处理，这种方法是极其低效的。你可能会想到用多线程去并行处理，但是编写多线程代码并非易事，容易出错并且维护困难。不过在Java 8之后，你可以使用Stream API来处理这些操作。</p>
+<p>Stream API将迭代操作封装到了内部，它会自动的选择最优的迭代方式，并且使用并行方式处理时，将集合分成多段，每一段分别使用不同的线程处理，最后将处理结果合并输出，有点类似于Fork-Join操作。</p>
+<p>需要注意的是，流只能遍历一次，遍历结束后，这个流就被关闭掉了。如果要重新遍历，可以从数据源（集合）中重新获取一个流。如果你对一个流遍历两次，就会抛出<code>java.lang.IllegalStateException</code>异常：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">List&lt;String&gt; list = Arrays.asList(<span class="string">"A"</span>, <span class="string">"B"</span>, <span class="string">"C"</span>, <span class="string">"D"</span>);</span><br><span class="line">Stream&lt;String&gt; stream = list.stream();</span><br><span class="line">stream.forEach(System.out::println);</span><br><span class="line">stream.forEach(System.out::println); <span class="comment">// 这里会抛出java.lang.IllegalStateException异常，因为流已经被关闭</span></span><br></pre></td></tr></table></figure>
+<p>流通常由三部分构成：</p>
+<ol>
+<li>数据源：数据源一般用于流的获取，比如本文开头那个过滤用户的例子中<code>users.stream()</code>方法。</li>
+<li>中间处理：中间处理包括对流中元素的一系列处理，如：过滤（<code>filter()</code>），映射（<code>map()</code>），排序（<code>sorted()</code>）。</li>
+<li>终端处理：终端处理会生成结果，结果可以是任何不是流值，如<code>List&lt;String&gt;</code>；也可以不返回结果，如<code>stream.forEach(System.out::println)</code>就是将结果打印到控制台中，并没有返回。</li>
+</ol>
+<h2 id="创建流"><a href="#创建流" class="headerlink" title="创建流"></a>创建流</h2><p>创建流的方式有很多，具体可以划分为以下几种：</p>
+<h3 id="由值创建流"><a href="#由值创建流" class="headerlink" title="由值创建流"></a>由值创建流</h3><p>使用静态方法<code>Stream.of()</code>创建流，该方法接收一个变长参数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Stream&lt;Stream&gt; stream = Stream.of(<span class="string">"A"</span>, <span class="string">"B"</span>, <span class="string">"C"</span>, <span class="string">"D"</span>);</span><br></pre></td></tr></table></figure>
+<p>也可以使用静态方法<code>Stream.empty()</code>创建一个空的流：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Stream&lt;Stream&gt; stream = Stream.empty();</span><br></pre></td></tr></table></figure>
+<h3 id="由数组创建流"><a href="#由数组创建流" class="headerlink" title="由数组创建流"></a>由数组创建流</h3><p>使用静态方法<code>Arrays.stream()</code>从数组创建一个流，该方法接收一个数组参数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">String[] strs = &#123;<span class="string">"A"</span>, <span class="string">"B"</span>, <span class="string">"C"</span>, <span class="string">"D"</span>&#125;;</span><br><span class="line">Stream&lt;Stream&gt; stream = Arrays.stream(strs);</span><br></pre></td></tr></table></figure>
+<h3 id="通过文件生成流"><a href="#通过文件生成流" class="headerlink" title="通过文件生成流"></a>通过文件生成流</h3><p>使用<code>java.nio.file.Files</code>类中的很多静态方法都可以获取流，比如<code>Files.lines()</code>方法，该方法接收一个<code>java.nio.file.Path</code>对象，返回一个由文件行构成的字符串流：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Stream&lt;String&gt; stream = Files.lines(Paths.get(<span class="string">"text.txt"</span>), Charset.defaultCharset());</span><br></pre></td></tr></table></figure>
+<h3 id="通过函数创建流"><a href="#通过函数创建流" class="headerlink" title="通过函数创建流"></a>通过函数创建流</h3><p><code>java.util.stream.Stream</code>中有两个静态方法用于从函数生成流，他们分别是<code>Stream.generate()</code>和<code>Stream.iterate()</code>：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// iteartor</span></span><br><span class="line">Stream.iterate(<span class="number">0</span>, n -&gt; n + <span class="number">2</span>).limit(<span class="number">51</span>).forEach(System.out::println);</span><br><span class="line"></span><br><span class="line"><span class="comment">// generate</span></span><br><span class="line">Stream.generate(() -&gt; <span class="string">"Hello Man!"</span>).limit(<span class="number">10</span>).forEach(System.out::println);</span><br></pre></td></tr></table></figure>
+<p>第一个方法会打印100以内的所有偶数，第二个方法打印10个<code>Hello Man!</code>。需要注意的是，这两个方法生成的流都是无限流，没有固定大小，可以无穷的计算下去，在上面的代码中我们使用了<code>limit()</code>来避免打印无穷个值。</p>
+<p>一般来说，<code>iterate()</code>用于生成一系列值，比如生成以当前时间开始之后的10天的日期：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Stream.iterate(LocalDate.now(), date -&gt; date.plusDays(<span class="number">1</span>)).limit(<span class="number">10</span>).forEach(System.out::println);</span><br></pre></td></tr></table></figure>
+<p><code>generate()</code>方法用于生成一些随机数，比如生成10个UUID：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Stream.generate(() -&gt; UUID.randomUUID().toString()).limit(<span class="number">10</span>).forEach(System.out::println);</span><br></pre></td></tr></table></figure>
+<h2 id="使用流"><a href="#使用流" class="headerlink" title="使用流"></a>使用流</h2><p><code>Stream</code>接口中包含许多对流操作的方法，这些方法分别为：</p>
+<ul>
+<li><code>filter()</code>：对流的元素过滤</li>
+<li><code>map()</code>：将流的元素映射成另一个类型</li>
+<li><code>distinct()</code>：去除流中重复的元素</li>
+<li><code>sorted()</code>：对流的元素排序</li>
+<li><code>forEach()</code>：对流中的每个元素执行某个操作</li>
+<li><code>peek()</code>：与<code>forEach()</code>方法效果类似，不同的是，该方法会返回一个新的流，而<code>forEach()</code>无返回</li>
+<li><code>limit()</code>：截取流中前面几个元素</li>
+<li><code>skip()</code>：跳过流中前面几个元素</li>
+<li><code>toArray()</code>：将流转换为数组</li>
+<li><code>reduce()</code>：对流中的元素归约操作，将每个元素合起来形成一个新的值</li>
+<li><code>collect()</code>：对流的汇总操作，比如输出成<code>List</code>集合</li>
+<li><code>anyMatch()</code>：匹配流中的元素，类似的操作还有<code>allMatch()</code>和<code>noneMatch()</code>方法</li>
+<li><code>findFirst()</code>：查找第一个元素，类似的还有<code>findAny()</code>方法</li>
+<li><code>max()</code>：求最大值</li>
+<li><code>min()</code>：求最小值</li>
+<li><code>count()</code>：求总数</li>
+</ul>
+<p>下面逐一介绍这些方法的用法。</p>
+<h3 id="过滤和排序"><a href="#过滤和排序" class="headerlink" title="过滤和排序"></a>过滤和排序</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Stream.of(<span class="number">1</span>, <span class="number">8</span>, <span class="number">5</span>, <span class="number">2</span>, <span class="number">1</span>, <span class="number">0</span>, <span class="number">9</span>, <span class="number">2</span>, <span class="number">0</span>, <span class="number">4</span>, <span class="number">8</span>)</span><br><span class="line">    .filter(n -&gt; n &gt; <span class="number">2</span>)     <span class="comment">// 对元素过滤，保留大于2的元素</span></span><br><span class="line">    .distinct()             <span class="comment">// 去重，类似于SQL语句中的DISTINCT</span></span><br><span class="line">    .skip(<span class="number">1</span>)                <span class="comment">// 跳过前面1个元素</span></span><br><span class="line">    .limit(<span class="number">2</span>)               <span class="comment">// 返回开头2个元素，类似于SQL语句中的SELECT TOP</span></span><br><span class="line">    .sorted()               <span class="comment">// 对结果排序</span></span><br><span class="line">    .forEach(System.out::println);</span><br></pre></td></tr></table></figure>
+<h3 id="查找和匹配"><a href="#查找和匹配" class="headerlink" title="查找和匹配"></a>查找和匹配</h3><p>Stream中提供的查找方法有<code>anyMatch()</code>、<code>allMatch()</code>、<code>noneMatch()</code>、<code>findFirst()</code>、<code>findAny()</code>，这些方法被用来查找或匹配某些元素是否符合给定的条件：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 检查流中的任意元素是否包含字符串"Java"</span></span><br><span class="line"><span class="keyword">boolean</span> hasMatch = Stream.of(<span class="string">"Java"</span>, <span class="string">"C#"</span>, <span class="string">"PHP"</span>, <span class="string">"C++"</span>, <span class="string">"Python"</span>)</span><br><span class="line">        .anyMatch(s -&gt; s.equals(<span class="string">"Java"</span>));</span><br><span class="line"></span><br><span class="line"><span class="comment">// 检查流中的所有元素是否都包含字符串"#"</span></span><br><span class="line"><span class="keyword">boolean</span> hasAllMatch = Stream.of(<span class="string">"Java"</span>, <span class="string">"C#"</span>, <span class="string">"PHP"</span>, <span class="string">"C++"</span>, <span class="string">"Python"</span>)</span><br><span class="line">        .allMatch(s -&gt; s.contains(<span class="string">"#"</span>));</span><br><span class="line"></span><br><span class="line"><span class="comment">// 检查流中的任意元素是否没有以"C"开头的字符串</span></span><br><span class="line"><span class="keyword">boolean</span> hasNoneMatch = Stream.of(<span class="string">"Java"</span>, <span class="string">"C#"</span>, <span class="string">"PHP"</span>, <span class="string">"C++"</span>, <span class="string">"Python"</span>)</span><br><span class="line">        .noneMatch(s -&gt; s.startsWith(<span class="string">"C"</span>));</span><br><span class="line"></span><br><span class="line"><span class="comment">// 查找元素</span></span><br><span class="line">Optional&lt;String&gt; element = Stream.of(<span class="string">"Java"</span>, <span class="string">"C#"</span>, <span class="string">"PHP"</span>, <span class="string">"C++"</span>, <span class="string">"Python"</span>)</span><br><span class="line">        .filter(s -&gt; s.contains(<span class="string">"C"</span>))</span><br><span class="line">        <span class="comment">// .findFirst()     // 查找第一个元素</span></span><br><span class="line">        .findAny();         <span class="comment">// 查找任意元素</span></span><br></pre></td></tr></table></figure>
+<p>注意最后一行代码的返回类型，是一个<code>Optional&lt;T&gt;</code>类（<code>java.util.Optional</code>），它一个容器类，代表一个值存在或不存在。上面的代码中，<code>findAny()</code>可能什么元素都没找到。<code>Optional&lt;T&gt;</code>是Java 8的另一个新特性，有关<code>Optional&lt;T&gt;</code>类的详细用法，将在下一篇文章中介绍。</p>
+<p>实际上测试结果发现，<code>findFirst()</code>和<code>findAny()</code>返回的都是第一个元素，那么两者之间到底有什么区别？通过查看javadoc描述，大致意思是<code>findAny()</code>是为了提高并行操作时的性能，如果没有特别需要，还是建议使用<code>findAny()</code>方法。</p>
+<h3 id="归约"><a href="#归约" class="headerlink" title="归约"></a>归约</h3><p>归约操作就是将流中的元素进行合并，形成一个新的值，常见的归约操作包括求和，求最大值或最小值。归约操作一般使用<code>reduce()</code>方法，与<code>map()</code>方法搭配使用，可以处理一些很复杂的归约操作。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 获取流</span></span><br><span class="line">List&lt;Book&gt; books = Arrays.asList(</span><br><span class="line">       <span class="keyword">new</span> Book(<span class="string">"Java编程思想"</span>, <span class="string">"Bruce Eckel"</span>, <span class="string">"机械工业出版社"</span>, <span class="number">108.00</span>D),</span><br><span class="line">       <span class="keyword">new</span> Book(<span class="string">"Java 8实战"</span>, <span class="string">"Mario Fusco"</span>, <span class="string">"人民邮电出版社"</span>, <span class="number">79.00</span>D),</span><br><span class="line">       <span class="keyword">new</span> Book(<span class="string">"MongoDB权威指南（第2版）"</span>, <span class="string">"Kristina Chodorow"</span>, <span class="string">"人民邮电出版社"</span>, <span class="number">69.00</span>D)</span><br><span class="line">);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 计算所有图书的总价</span></span><br><span class="line">Optional&lt;Double&gt; totalPrice = books.stream()</span><br><span class="line">       .map(Book::getPrice)</span><br><span class="line">       .reduce((n, m) -&gt; n + m);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 价格最高的图书</span></span><br><span class="line">Optional&lt;Book&gt; expensive = books.stream().max(Comparator.comparing(Book::getPrice));</span><br><span class="line"><span class="comment">// 价格最低的图书</span></span><br><span class="line">Optional&lt;Book&gt; cheapest = books.stream().min(Comparator.comparing(Book::getPrice));</span><br><span class="line"><span class="comment">// 计算总数</span></span><br><span class="line"><span class="keyword">long</span> count = books.stream().count()</span><br></pre></td></tr></table></figure>
+<p>在计算图书总价的时候首先使用<code>map()</code>方法得到所有图书价格的流，然后再使用<code>reduce()</code>方法进行归约计算。与<code>map()</code>方法类似的还有一个<code>flatMap()</code>，通过名字可以看出<code>flatMap()</code>方法是将流进行扁平化操作，看看下面的代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">List&lt;User&gt; users = userDAO.selectAllByInstId(instId);</span><br><span class="line">List&lt;List&lt;Role&gt;&gt; userRoles = users.stream()</span><br><span class="line">        .map(User::getOid)</span><br><span class="line">        .map(userId -&gt; &#123;</span><br><span class="line">            List&lt;Role&gt; roles = roleDAO.selectAllByUserId(userId);</span><br><span class="line">            <span class="keyword">return</span> roles;</span><br><span class="line">        &#125;).collect(Collectors.toList());</span><br></pre></td></tr></table></figure>
+<p>首先根据<code>InstId</code>查询所有用户集合，再根据用户获取与其关联的所有角色集合，最终返回结果是一个<code>List&lt;List&lt;Role&gt;&gt;</code>类型，但这不是我们想要的类型，我们想要的是<code>List&lt;Role&gt;</code>这种扁平的集合，这时候<code>flatMap()</code>就派上用场了：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">List&lt;User&gt; users = userDAO.selectAllByInstId(instId);</span><br><span class="line">List&lt;Role&gt; userRoles = users.stream()</span><br><span class="line">        .map(User::getOid)</span><br><span class="line">        .map(userId -&gt; &#123;</span><br><span class="line">            List&lt;Role&gt; roles = roleDAO.selectAllByUserId(userId);</span><br><span class="line">            <span class="keyword">return</span> roles;</span><br><span class="line">        &#125;).flatMap(roles -&gt; roles.stream()) <span class="comment">// 扁平化操作</span></span><br><span class="line">        .collect(Collectors.toList());</span><br></pre></td></tr></table></figure>
+<p>第二个<code>map()</code>返回的结果是<code>List&lt;Role&gt;</code>，接着使用<code>flatMap(roles -&gt; roles.stream())</code>扁平化处理，将各个不同的<code>List&lt;Role&gt;</code>合并成一个大的<code>List&lt;Role&gt;</code>。<code>flatMap()</code>适合处理类似于二维数组这种格式，将其扁平化：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">List&lt;List&lt;String&gt;&gt; list = <span class="keyword">new</span> ArrayList&lt;List&lt;String&gt;&gt;() &#123;&#123;</span><br><span class="line">    add(<span class="keyword">new</span> ArrayList&lt;String&gt;() &#123;&#123;</span><br><span class="line">        add(<span class="string">"A1"</span>);</span><br><span class="line">        add(<span class="string">"A2"</span>);</span><br><span class="line">        add(<span class="string">"A3"</span>);</span><br><span class="line">    &#125;&#125;);</span><br><span class="line"></span><br><span class="line">    add(<span class="keyword">new</span> ArrayList&lt;String&gt;() &#123;&#123;</span><br><span class="line">        add(<span class="string">"B1"</span>);</span><br><span class="line">        add(<span class="string">"B2"</span>);</span><br><span class="line">        add(<span class="string">"B3"</span>);</span><br><span class="line">    &#125;&#125;);</span><br><span class="line"></span><br><span class="line">    add(<span class="keyword">new</span> ArrayList&lt;String&gt;() &#123;&#123;</span><br><span class="line">        add(<span class="string">"C1"</span>);</span><br><span class="line">        add(<span class="string">"C2"</span>);</span><br><span class="line">        add(<span class="string">"C3"</span>);</span><br><span class="line">    &#125;&#125;);</span><br><span class="line">&#125;&#125;;</span><br><span class="line"></span><br><span class="line">List&lt;String&gt; result = list.stream()</span><br><span class="line">        .flatMap(ls -&gt; ls.stream())</span><br><span class="line">        .collect(Collectors.toList());</span><br></pre></td></tr></table></figure>
+<h2 id="数据收集"><a href="#数据收集" class="headerlink" title="数据收集"></a>数据收集</h2><p>前面两部分内容分别为流式数据处理的前两个步骤：从数据源创建流、使用流进行中间处理。下面我们介绍流式数据处理的最后一个步骤——数据收集。</p>
+<p>数据收集是流式数据处理的终端处理，与中间处理不同的是，终端处理会消耗流，也就是说，终端处理之后，这个流就会被关闭，如果再进行中间处理，就会抛出异常。数据收集主要使用<code>collect</code>方法，与<code>reduce()</code>方法一样，该方法也属于归约操作，将流中的元素累积成一个汇总结果，具体的做法是通过定义新的<code>Collector</code>接口来定义的。</p>
+<p>在前面部分的例子中使用收集器（<code>Collector</code>）是由<code>java.util.stream.Collectors</code>工具类中的<code>toList()</code>方法提供，<code>Collectors</code>类提供了许多常用的方法用于处理数据收集，常见的有归约、汇总、分组等。</p>
+<h3 id="归约和汇总"><a href="#归约和汇总" class="headerlink" title="归约和汇总"></a>归约和汇总</h3><p>我们使用前面归约操作中计算图书总价，最大值，最小值，输入总数那个例子来看看收集器如何进行上述归约操作：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 求和</span></span><br><span class="line"><span class="keyword">long</span> count = books.stream().collect(counting());</span><br><span class="line"></span><br><span class="line"><span class="comment">// 价格最高的图书</span></span><br><span class="line">Optional&lt;Book&gt; expensive = books.stream().collect(maxBy(comparing(Book::getPrice)));</span><br><span class="line"></span><br><span class="line"><span class="comment">// 价格最低的图书</span></span><br><span class="line">Optional&lt;Book&gt; cheapest = books.stream().collect(minBy(comparing(Book::getPrice)));</span><br></pre></td></tr></table></figure>
+<p>上面的代码需要使用静态导入<code>Collectors</code>和<code>Comparator</code>两个类，这样你就不用再去写<code>Collectors.counting()</code>和<code>Comparator.comparing()</code>这样的代码了：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> <span class="keyword">static</span> java.util.stream.Collectors.*;</span><br><span class="line"><span class="keyword">import</span> <span class="keyword">static</span> java.util.Comparator.*;</span><br></pre></td></tr></table></figure>
+<p><code>Collectors</code>工具类为我们提供了用于汇总的方法，包括<code>summarizingInt()</code>，<code>summarizingLong()</code>和<code>summarizingDouble()</code>，由于图书的价格为<code>Double</code>类型，所以我们使用<code>summarizingDouble()</code>方法进行汇总。该方法会返回一个<code>DoubleSummaryStatistics</code>对象，包含一系列归约操作的方法，如：汇总、计算平均数、最大值、最小值、计算总数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">DoubleSummaryStatistics dss = books.stream().collect(summarizingDouble(Book::getPrice));</span><br><span class="line"><span class="keyword">double</span> sum = dss.getSum();          <span class="comment">// 汇总</span></span><br><span class="line"><span class="keyword">double</span> average = dss.getAverage();  <span class="comment">// 求平均数</span></span><br><span class="line"><span class="keyword">long</span> count = dss.getCount();        <span class="comment">// 计算总数</span></span><br><span class="line"><span class="keyword">double</span> max = dss.getMax();          <span class="comment">// 最大值</span></span><br><span class="line"><span class="keyword">double</span> min = dss.getMin();          <span class="comment">// 最小值</span></span><br></pre></td></tr></table></figure>
+<p><code>Collectors</code>类还包含一个<code>joining()</code>方法，该方法用于连接字符串：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">String str = Stream.of(<span class="string">"A"</span>, <span class="string">"B"</span>, <span class="string">"C"</span>, <span class="string">"D"</span>).collect(joining(<span class="string">","</span>));</span><br></pre></td></tr></table></figure>
+<p>上面的代码用于将流中的字符串通过逗号连接成一个新的字符串。</p>
+<h3 id="分组"><a href="#分组" class="headerlink" title="分组"></a>分组</h3><p>和关系数据库一样，流也提供了类似于数据库中<code>GROUP BY</code>分组的特性，由<code>Collectors.groupingBy()</code>方法提供：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Map&lt;String, List&lt;Book&gt;&gt; booksGroup = books.stream().collect(groupingBy(Book::getPublisher));</span><br></pre></td></tr></table></figure>
+<p>上面的代码按照出版社对图书进行分组，分组的结果是一个<code>Map</code>对象，<code>Map</code>的<code>key</code>值是出版社的名称，<code>value</code>值是每个出版社分组对应的集合。分组方法<code>groupingBy()</code>接收一个<code>Function</code>接口作为参数，上面的例子中我们使用了方法引用传递了出版社作为分组的依据，但实际情况可能比这复杂，比如将价格在0-50之间的书籍分成一组，50-100之间的分成一组，超过100的分成一组，这时候，我们可以直接使用Lambda表达式来表示这个分组逻辑：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">Map&lt;String, List&lt;Book&gt;&gt; booksGroup = books</span><br><span class="line">    .stream()</span><br><span class="line">    .collect(groupingBy(book -&gt; &#123;</span><br><span class="line">        <span class="keyword">if</span> (book.getPrice() &gt; <span class="number">0</span> &amp;&amp; book.getPrice() &lt;= <span class="number">50</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="string">"A"</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (book.getPrice() &gt; <span class="number">50</span> &amp;&amp; book.getPrice() &lt;=<span class="number">100</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="string">"B"</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="string">"C"</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;));</span><br></pre></td></tr></table></figure>
+<p><code>groupingBy()</code>方法还支持多级分组，他有一个重载方法，除了接收一个<code>Function</code>类型的参数外，还接收一个<code>Collector</code>类型的参数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">Map&lt;String, Map&lt;String, List&lt;Book&gt;&gt;&gt; booksGroup = books.stream().collect(</span><br><span class="line">        groupingBy(Book::getPublisher, groupingBy(book -&gt; &#123;</span><br><span class="line">            <span class="keyword">if</span> (book.getPrice() &gt; <span class="number">0</span> &amp;&amp; book.getPrice() &lt;= <span class="number">50</span>) &#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="string">"A"</span>;</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (book.getPrice() &gt; <span class="number">50</span> &amp;&amp; book.getPrice() &lt;=<span class="number">100</span>) &#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="string">"B"</span>;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="string">"C"</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;))</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+<p>上面的代码将之前两个分组合并成一个，实现了多级分组，首先按照出版社进行分组，然后按照价格进行分组，返回类型是一个<code>Map&lt;String, Map&lt;String, List&lt;Book&gt;&gt;&gt;</code>。<code>groupingBy()</code>的第二个参数可以是任意类型，只要是<code>Collector</code>接口的实例就可以，比如先分组，再统计数量：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Map&lt;String, Long&gt; countGroup = books.stream()</span><br><span class="line">        .collect(groupingBy(Book::getPublisher, counting()));</span><br></pre></td></tr></table></figure>
+<p>还可以在进行分组后获取每组中价格最高的图书：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Map&lt;String, Book&gt; expensiveGroup = books.stream()</span><br><span class="line">        .collect(groupingBy(Book::getPublisher, collectingAndThen(</span><br><span class="line">            maxBy(comparingDouble(Book::getPrice)),</span><br><span class="line">                Optional::get</span><br><span class="line">        )));</span><br></pre></td></tr></table></figure>
+<h2 id="并行数据处理"><a href="#并行数据处理" class="headerlink" title="并行数据处理"></a>并行数据处理</h2><h3 id="并行流"><a href="#并行流" class="headerlink" title="并行流"></a>并行流</h3><p>并行流使用集合的<code>parallelStream()</code>方法可以获取一个并行流。Java内部会将流的内容分割成若干个子部分，然后将它们交给多个线程并行处理，这样就将工作的负担交给多核CPU的其他内核处理。</p>
+<p>我们通过一个简单粗暴的例子演示并行流的处理性能。假设有一个方法，接受一个数字n作为参数，返回从1到n的所有自然数之和：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">long</span> <span class="title">sequentialSum</span><span class="params">(<span class="keyword">long</span> n)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">return</span> Stream.iterate(<span class="number">1L</span>, i -&gt; i + <span class="number">1</span>)</span><br><span class="line">			.limit(n)</span><br><span class="line">			.reduce(<span class="number">0L</span>, Long::sum);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上面的方法也可以通过传统的for循环方式实现：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">long</span> <span class="title">iterativeSum</span><span class="params">(<span class="keyword">long</span> n)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">long</span> result = <span class="number">0</span>;</span><br><span class="line">	<span class="keyword">for</span> (<span class="keyword">long</span> i = <span class="number">1L</span>; i &lt;= n; i++) &#123;</span><br><span class="line">		result += i;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>编写测试代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">long</span> number = <span class="number">10000000L</span>;</span><br><span class="line">    System.out.println(<span class="string">"Sequential Sum: "</span> + sumPerformanceTest(StreamTest::sequentialSum, number) + <span class="string">" 毫秒"</span>);</span><br><span class="line">    System.out.println(<span class="string">"Iterative Sum: "</span> + sumPerformanceTest(StreamTest::iterativeSum, number) + <span class="string">" 毫秒"</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">long</span> <span class="title">sumPerformanceTest</span><span class="params">(Function&lt;Long, Long&gt; function, <span class="keyword">long</span> number)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">long</span> maxValue = Long.MAX_VALUE;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> (<span class="keyword">int</span> i=<span class="number">0</span>; i&lt;<span class="number">10</span>; i++) &#123;</span><br><span class="line">		<span class="keyword">long</span> start = System.nanoTime();</span><br><span class="line">		<span class="keyword">long</span> sum = function.apply(n);</span><br><span class="line">		<span class="keyword">long</span> end = System.nanoTime();</span><br><span class="line">		System.out.println(<span class="string">"Result: "</span> + sum);</span><br><span class="line">		<span class="keyword">long</span> time = ( end - start ) / <span class="number">1000000</span>;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (time &lt; maxValue) &#123;</span><br><span class="line">			maxValue = time;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> maxValue;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上面的测试代码中我们编写了一个<code>sumPerformanceTest()</code>方法，参数<code>number</code>表示给定的一个数，用于计算从1到这个数的所有自然数之和。该方法内部执行10次运算，返回时间最短的一次运算结果。</p>
+<p>运行上面的代码，可以在控制台看到如下结果：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">Result: 200000010000000</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Sequential Sum: 159 毫秒</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Iterative Sum: 5 毫秒</span><br></pre></td></tr></table></figure>
+<p>从结果来看，采用传统的for循环更快，因为它不用做任何自动拆箱/装箱操作，操作的都是基本类型。这个测试结果并不客观，提升的性能取决于机器的配置，以上是我在公司的台式机（机器配置为<code>Intel(R) Core i7-6700 CPU 3.40HZ; 8GB RAM</code>）上运行的结果。</p>
+<p>现在我们使用并行流测试一下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">long</span> <span class="title">parallelSum</span><span class="params">(<span class="keyword">long</span> n)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">return</span> Stream.iterate(<span class="number">1L</span>, i -&gt; i + <span class="number">1</span>)</span><br><span class="line">			.limit(n)</span><br><span class="line">			.parallel()</span><br><span class="line">			.reduce(<span class="number">0L</span>, Long::sum);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">	System.out.println(<span class="string">"Parallel Sum: "</span> + sumPerformanceTest(StreamTest::parallelSum, number) + <span class="string">" 毫秒"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>并行流执行结果为：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">Result: 200000010000000</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Parallel Sum: 570 毫秒</span><br></pre></td></tr></table></figure>
+<p>并行的执行效率比顺序执行还要慢，这个结果有点出乎意料。主要有两个原因：</p>
+<ol>
+<li><code>iterate()</code>方法生成的对象是基本类型的包装类（也就是<code>java.lang.Long</code>类型），必须进行拆箱操作才能运算。</li>
+<li><code>iterate()</code>方法不适合用并行流处理。</li>
+</ol>
+<p>第一个原因容易理解，自动拆箱操作确实需要花费一定的时间，这从前一个例子可以看出来。</p>
+<p>第二个原因中<code>iterate()</code>方法不适合用并行流处理，主要原因是<code>iterate()</code>方法内部机制的问题。<code>iterate()</code>方法每次执行都需要依赖前一次的结果，比如本次执行的输入值为10，这个输入值必须是前一次运算结果的输出，因此<code>iterate()</code>方法很难使用并行流分割成不同小块处理。实际上，上面的并行流程序还增加了顺序处理的额外开销，因为需要把每次操作执行的结果分别分配到不同的线程中。</p>
+<p>一个有效的处理方式是使用<code>LongStream.rangeClosed()</code>方法，该方法弥补了上述例子的两个缺点，它生成的是基本类型而非包装类，不用拆箱操作就可以运算，并且，它生成的是有范围的数字，很容易拆分。如：生成1-20范围的数字可以拆分成1-10, 11-20。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">long</span> <span class="title">rangedSum</span><span class="params">(<span class="keyword">long</span> n)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">return</span> LongStream.rangeClosed(<span class="number">1</span>, n)</span><br><span class="line">			.reduce(<span class="number">0L</span>, Long::sum);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">	System.out.println(<span class="string">"Ranged Sum: "</span> + sumPerformanceTest(StreamTest::rangedSum, number) + <span class="string">" 毫秒"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>执行结果为：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">Result: 200000010000000</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Ranged Sum: 8 毫秒</span><br></pre></td></tr></table></figure>
+<p>这个结果比起<code>sequentialSum()</code>方法执行的结果还要快，所以选择合适的数据结构有时候比并行化处理更重要。我们再将<code>rangeClosed()</code>方法生成的流转化为并行流：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">long</span> <span class="title">parallelRangedSum</span><span class="params">(<span class="keyword">long</span> n)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> LongStream.rangeClosed(<span class="number">1</span>, n)</span><br><span class="line">            .parallel()</span><br><span class="line">            .reduce(<span class="number">0L</span>, Long::sum);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">	System.out.println(<span class="string">"Parallel Ranged Sum: "</span> + sumPerformanceTest(StreamTest::parallelRangedSum, number) + <span class="string">" 毫秒"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>执行结果为：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">Result: 200000010000000</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Result: 200000010000000</span><br><span class="line">Parallel Ranged Sum: 2 毫秒</span><br></pre></td></tr></table></figure>
+<p>我们终于得到了想要的结果，所以并行操作需要选择合适的数据结构，建议多做测试，找到合适的并行方式再执行，否则很容易跳到坑里。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/java/java8-lambda-expression.html" rel="next" title="Java 8新特性（一）：Lambda表达式">
+                <i class="fa fa-chevron-left"></i> Java 8新特性（一）：Lambda表达式
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/java/java8-optional.html" rel="prev" title="Java 8新特性（三）：Optional类">
+                Java 8新特性（三）：Optional类 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div id="lv-container" data-id="city" data-uid="MTAyMC8yODgxNC81Mzg0"></div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="/uploads/avatar.jpg" alt="大猫">
+          <p class="site-author-name" itemprop="name">大猫</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">13</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">4</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/lw900925" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/u/2644358083" target="_blank" title="Weibo">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  Weibo
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Stream-API简介"><span class="nav-number">1.</span> <span class="nav-text">Stream API简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#创建流"><span class="nav-number">2.</span> <span class="nav-text">创建流</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#由值创建流"><span class="nav-number">2.1.</span> <span class="nav-text">由值创建流</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#由数组创建流"><span class="nav-number">2.2.</span> <span class="nav-text">由数组创建流</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#通过文件生成流"><span class="nav-number">2.3.</span> <span class="nav-text">通过文件生成流</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#通过函数创建流"><span class="nav-number">2.4.</span> <span class="nav-text">通过函数创建流</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用流"><span class="nav-number">3.</span> <span class="nav-text">使用流</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#过滤和排序"><span class="nav-number">3.1.</span> <span class="nav-text">过滤和排序</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#查找和匹配"><span class="nav-number">3.2.</span> <span class="nav-text">查找和匹配</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#归约"><span class="nav-number">3.3.</span> <span class="nav-text">归约</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#数据收集"><span class="nav-number">4.</span> <span class="nav-text">数据收集</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#归约和汇总"><span class="nav-number">4.1.</span> <span class="nav-text">归约和汇总</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#分组"><span class="nav-number">4.2.</span> <span class="nav-text">分组</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#并行数据处理"><span class="nav-number">5.</span> <span class="nav-text">并行数据处理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#并行流"><span class="nav-number">5.1.</span> <span class="nav-text">并行流</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy;  2016 - 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-copyright"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">大猫</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+    <script type="text/javascript">
+      (function(d, s) {
+        var j, e = d.getElementsByTagName(s)[0];
+        if (typeof LivereTower === 'function') { return; }
+        j = d.createElement(s);
+        j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+        j.async = true;
+        e.parentNode.insertBefore(j, e);
+      })(document, 'script');
+    </script>
+  
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length == 0) {
+      search_path = "search.xml";
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.popup').toggle();
+    }
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+      $.ajax({
+        url: path,
+        dataType: "xml",
+        async: true,
+        success: function( xmlResponse ) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = $( "entry", xmlResponse ).map(function() {
+            return {
+              title: $( "title", this ).text(),
+              content: $("content",this).text(),
+              url: $( "url" , this).text()
+            };
+          }).get();
+          var $input = document.getElementById(search_id);
+          var $resultContent = document.getElementById(content_id);
+          $input.addEventListener('input', function(){
+            var matchcounts = 0;
+            var str='<ul class=\"search-result-list\">';
+            var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+            $resultContent.innerHTML = "";
+            if (this.value.trim().length > 1) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var content_index = [];
+                var data_title = data.title.trim().toLowerCase();
+                var data_content = data.content.trim().replace(/<[^>]+>/g,"").toLowerCase();
+                var data_url = decodeURIComponent(data.url);
+                var index_title = -1;
+                var index_content = -1;
+                var first_occur = -1;
+                // only match artiles with not empty titles and contents
+                if(data_title != '') {
+                  keywords.forEach(function(keyword, i) {
+                    index_title = data_title.indexOf(keyword);
+                    index_content = data_content.indexOf(keyword);
+                    if( index_title >= 0 || index_content >= 0 ){
+                      isMatch = true;
+                      if (i == 0) {
+                        first_occur = index_content;
+                      }
+                    }
+
+                  });
+                }
+                // show search results
+                if (isMatch) {
+                  matchcounts += 1;
+                  str += "<li><a href='"+ data_url +"' class='search-result-title'>"+ data_title +"</a>";
+                  var content = data.content.trim().replace(/<[^>]+>/g,"");
+                  if (first_occur >= 0) {
+                    // cut out 100 characters
+                    var start = first_occur - 20;
+                    var end = first_occur + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if(start == 0){
+                      end = 50;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    var match_content = content.substring(start, end);
+                    // highlight all keywords
+                    keywords.forEach(function(keyword){
+                      var regS = new RegExp(keyword, "gi");
+                      match_content = match_content.replace(regS, "<b class=\"search-keyword\">"+keyword+"</b>");
+                    });
+
+                    str += "<p class=\"search-result\">" + match_content +"...</p>"
+                  }
+                  str += "</li>";
+                }
+              })};
+            str += "</ul>";
+            if (matchcounts == 0) { str = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>' }
+            if (keywords == "") { str = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>' }
+            $resultContent.innerHTML = str;
+          });
+          proceedsearch();
+        }
+      });}
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched == false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(function(e){
+      $('.popup').hide();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    });
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

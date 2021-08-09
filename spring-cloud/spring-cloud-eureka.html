@@ -1,0 +1,978 @@
+<!doctype html>
+
+
+
+
+<html class="theme-next pisces" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="spring cloud">
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0">
+
+
+
+
+
+
+<meta name="description" content="这篇主要介绍Spring Cloud Netflix套件中比较重要的模块——Spring Cloud Eureka，使用Spring Cloud Eureka搭建注册中心，并配置为高可用，以及将其他微服务注册到Eureka上。">
+<meta name="keywords" content="spring cloud">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring Cloud 微服务：Spring Cloud Eureka">
+<meta property="og:url" content="https://lw900925.github.io/spring-cloud/spring-cloud-eureka.html">
+<meta property="og:site_name" content="余斗 阝日">
+<meta property="og:description" content="这篇主要介绍Spring Cloud Netflix套件中比较重要的模块——Spring Cloud Eureka，使用Spring Cloud Eureka搭建注册中心，并配置为高可用，以及将其他微服务注册到Eureka上。">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://raw.githubusercontent.com/lw900925/blog-asset/master/images/banner/spring-cloud-logo.jpeg">
+<meta property="og:image" content="https://raw.githubusercontent.com/lw900925/blog-asset/master/images/_post/eureka-server-dashboard-01.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/lw900925/blog-asset/master/images/_post/eureka-server-dashboard-02.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/lw900925/blog-asset/master/images/_post/eureka-server-dashboard-06.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/lw900925/blog-asset/master/images/_post/eureka-server-dashboard-03.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/lw900925/blog-asset/master/images/_post/eureka-server-dashboard-04.png">
+<meta property="og:updated_time" content="2021-08-09T04:02:20.017Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Spring Cloud 微服务：Spring Cloud Eureka">
+<meta name="twitter:description" content="这篇主要介绍Spring Cloud Netflix套件中比较重要的模块——Spring Cloud Eureka，使用Spring Cloud Eureka搭建注册中心，并配置为高可用，以及将其他微服务注册到Eureka上。">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/lw900925/blog-asset/master/images/banner/spring-cloud-logo.jpeg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: false,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://lw900925.github.io/spring-cloud/spring-cloud-eureka.html">
+
+
+<meta name="baidu-site-verification" content="oso5Gb5GqD">
+<meta name="google-site-verification" content="4JxuSe7vpA5jMMjMwU5V4-VUcZTlFBK3DfJvxuzkJi8">
+
+  <title> Spring Cloud 微服务：Spring Cloud Eureka | 余斗 阝日 </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//tajs.qq.com/stats?sId=59930119";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">余斗 阝日</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">这个人很懒，什么都没写……</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="https://lw900925.github.io/spring-cloud/spring-cloud-eureka.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="大猫">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/uploads/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="余斗 阝日">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Spring Cloud 微服务：Spring Cloud Eureka
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-08-17T00:00:00+00:00">
+                2017-08-17
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/spring-cloud/" itemprop="url" rel="index">
+                    <span itemprop="name">spring cloud</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p><img src="https://raw.githubusercontent.com/lw900925/blog-asset/master/images/banner/spring-cloud-logo.jpeg"></p>
+<p>这篇主要介绍Spring Cloud Netflix套件中比较重要的模块——Spring Cloud Eureka，使用Spring Cloud Eureka搭建注册中心，并配置为高可用，以及将其他微服务注册到Eureka上。</p>
+<a id="more"></a>
+<h2 id="服务注册与发现"><a href="#服务注册与发现" class="headerlink" title="服务注册与发现"></a>服务注册与发现</h2><p>想象一下我们在之前的开发模式中，如果某个服务需要调用另一个服务提供的接口，我们需要知道被调用服务的IP地址，该IP地址必须是固定的，通常会将该IP写在配置文件中维护。不过，在微服务架构模式中，所有微服务实例都是集群部署，如果还按照手动维护配置文件中的服务IP地址，很容易出错，而且维护工作量大，这就需要一个统一维护服务IP清单的注册中心。</p>
+<p>服务注册通常都会依赖注册中心，注册中心是服务发现的关键部分，它是包含各个服务实例网络地址的数据库。注册中心要保证高可用和及时更新，客户端定期从注册中心获取最新的服务清单。注册中心还需要定期检测清单中的服务是否可用，将不可用的服务剔除。</p>
+<p>服务的发现主要有两种：客户端发现和服务端发现。Netflix OSS套件中的Eureka就属于客户端发现，客户端从注册中心获取可用的服务清单，然后使用负载均衡算法向其中某个服务发起请求；另一种是服务端发现，客户端通过负载均衡向指定服务发起请求，负载均衡首先查询注册中心，将请求转发到可用的服务上。</p>
+<h2 id="Spring-Cloud-Eureka简介"><a href="#Spring-Cloud-Eureka简介" class="headerlink" title="Spring Cloud Eureka简介"></a>Spring Cloud Eureka简介</h2><p>Spring Cloud Eureka是Spring对Netflix Eureka的封装，使用Spring Boot风格的配置，开发人员只需要引入相关依赖，做一些简单配置就可以实现Eureka的功能。Spring Cloud Eureka分为两部分，Eureka Server和Eureka Client。</p>
+<p>Eureka Server也就是我们上面提到的注册中心，和大多数注册中心框架一样，Eureka支持集群方式部署，以此达到高可用。Eureka的高可用是通过各个副本（Replica）互相注册来实现的，我们随后会对这一特性展开讨论。</p>
+<p>Eureka Client主要提供服务的注册和发现，通过引入依赖的方式嵌入到微服务项目中，当Eureka Client启动时，会将自己注册到注册中心，并定期向注册中心发送心跳（Heartbeat）请求来续约。同时，Eureka Client还可以定期从注册中心查询可用的服务清单，缓存到本地并定期刷新。</p>
+<h2 id="开始构建"><a href="#开始构建" class="headerlink" title="开始构建"></a>开始构建</h2><h3 id="Eureka-Server"><a href="#Eureka-Server" class="headerlink" title="Eureka Server"></a>Eureka Server</h3><p>新建一个Spring Boot工程<code>springcloud-eureka</code>，在<code>build.gradle</code>中引入依赖<code>spring-cloud-starter-eureka-server</code>依赖：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">dependencies &#123;</span><br><span class="line">    compile(<span class="string">'org.springframework.cloud:spring-cloud-starter-eureka-server'</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在Spring Boot的启动类上添加<code>@EnableEurekaServer</code>注解：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> org.matrixstudio.springcloud.eureka;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.springframework.boot.SpringApplication;</span><br><span class="line"><span class="keyword">import</span> org.springframework.boot.autoconfigure.SpringBootApplication;</span><br><span class="line"><span class="keyword">import</span> org.springframework.cloud.netflix.eureka.server.EnableEurekaServer;</span><br><span class="line"></span><br><span class="line"><span class="meta">@SpringBootApplication</span></span><br><span class="line"><span class="meta">@EnableEurekaServer</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">EurekaApplication</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        SpringApplication.run(EurekaApplication<span class="class">.<span class="keyword">class</span>, <span class="title">args</span>)</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在<code>application.properties</code>文件中添加Eureka的配置：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"># Spring application</span><br><span class="line">spring.application.name=springcloud-eureka</span><br><span class="line"></span><br><span class="line"># Server port</span><br><span class="line">server.port=8761</span><br><span class="line"></span><br><span class="line">management.security.enabled=false</span><br><span class="line"></span><br><span class="line"># Spring cloud eureka</span><br><span class="line">eureka.instance.hostname=springcloud-eureka</span><br><span class="line">eureka.instance.prefer-ip-address=true</span><br><span class="line"></span><br><span class="line">eureka.client.register-with-eureka=false</span><br><span class="line">eureka.client.fetch-registry=false</span><br><span class="line">eureka.client.service-url.defaultZone=http://localhost:$&#123;server.port&#125;/eureka/</span><br></pre></td></tr></table></figure>
+<p>然后启动<code>springcloud-eureka</code>项目，在浏览器中输入<code>http://localhost:8761/</code>就可以看到Eureka的Dashboard页面了。</p>
+<p><img src="https://raw.githubusercontent.com/lw900925/blog-asset/master/images/_post/eureka-server-dashboard-01.png"></p>
+<p>可以看到，在Instances currently registered with eureka下面的表格中没有数据，这是因为还没有服务注册到注册中心。</p>
+<p>注册中心已经搭建完成，下面我们将微服务注册到Eureka Server上。</p>
+<h3 id="Eureka-Client"><a href="#Eureka-Client" class="headerlink" title="Eureka Client"></a>Eureka Client</h3><p>在上一片文章<a href="https://lw900925.github.io/spring-cloud/spring-cloud-config.html">Spring Cloud 微服务：Spring Cloud Config</a>中我们创建了一个<code>springcloud-file-service</code>的项目作为Config Client，现在我们在该项目上添加Eureka Client的支持，使其注册到Eureka Server注册中心上。</p>
+<p>首先需要引入依赖，<code>springcloud-file-service</code>项目中加入<code>spring-cloud-starter-eureka</code>起步依赖：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">dependencies &#123;</span><br><span class="line">    compile(<span class="string">'org.springframework.cloud:spring-cloud-starter-eureka'</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>然后修改<code>springcloud-file-service</code>项目的Spring Boot启动类，添加<code>@EnableDiscoveryClient</code>注解，开启Eureka Client功能：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> org.matrixstudio.springcloud.file;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.springframework.boot.SpringApplication;</span><br><span class="line"><span class="keyword">import</span> org.springframework.boot.autoconfigure.SpringBootApplication;</span><br><span class="line"><span class="keyword">import</span> org.springframework.cloud.client.discovery.EnableDiscoveryClient;</span><br><span class="line"></span><br><span class="line"><span class="meta">@SpringBootApplication</span></span><br><span class="line"><span class="meta">@EnableDiscoveryClient</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">FileServiceApplication</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        SpringApplication.run(FileServiceApplication<span class="class">.<span class="keyword">class</span>, <span class="title">args</span>)</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>还需要在<code>application.properties</code>文件中添加Eureka Server配置：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"># Spring application</span><br><span class="line">spring.application.name=springcloud-file-service</span><br><span class="line"></span><br><span class="line"># Server port</span><br><span class="line">server.port=8000</span><br><span class="line"></span><br><span class="line">management.security.enabled=false</span><br><span class="line"></span><br><span class="line"># Spring cloud eureka discovery</span><br><span class="line">eureka.instance.prefer-ip-address=true</span><br><span class="line"></span><br><span class="line">eureka.client.service-url.defaultZone=http://localhost:8761/eureka/</span><br></pre></td></tr></table></figure>
+<p>然后分别启动<code>springcloud-file-service</code>和<code>springcloud-eureka</code>项目，查看Eureka Server的Dashboard界面。</p>
+<p><img src="https://raw.githubusercontent.com/lw900925/blog-asset/master/images/_post/eureka-server-dashboard-02.png"></p>
+<p>可以看到Instances currently registered with eureka下方的表格内多了一个<code>SPRINGCLOUD-FILE-SERVICE</code>的服务，说明<code>springcloud-file-service</code>已经注册到Eureka Server上了。</p>
+<p>也可以将<code>springcloud-file-service</code>部署多个实例，都注册到Eureka Server上，提高容错率（可以通过指定<code>profile</code>方式启动多个实例）。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">java -jar springcloud-file-service-0.0.1-SNAPSHOT.jar --server.port=8000</span><br><span class="line">java -jar springcloud-file-service-0.0.1-SNAPSHOT.jar --server.port=8001</span><br></pre></td></tr></table></figure>
+<p><img src="https://raw.githubusercontent.com/lw900925/blog-asset/master/images/_post/eureka-server-dashboard-06.png"></p>
+<p>查看Eureka Dashboard，发现列表中有两个<code>springcloud-file-service</code>的实例，端口分别为<code>8080</code>和<code>8081</code>。</p>
+<h2 id="的高可用"><a href="#的高可用" class="headerlink" title="的高可用"></a>的高可用</h2><p>前面提到了注册中心的高可用，Eureka也可以配置为高可用注册中心。前面我们构建Eureka Server的时候，<code>application.properties</code>里有两个配置：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">eureka.client.register-with-eureka=false</span><br><span class="line">eureka.client.fetch-registry=false</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>eureka.client.register-with-eureka</code>：表示是否将注册到Eureka Server</li>
+<li><code>eureka.client.fetch-registry</code>：表示是否获取注册中心的服务注册信息</li>
+</ul>
+<p>这两个配置默认值都是<code>true</code>，在构建Eureka Server时，由于Eureka Server是单机部署，所以Eureka不需要将自己注册到注册中心，也不需要获取服务清单。如果是集群部署，需要将这两个配置修改为默认值（或不指定这两个配置，默认就是<code>true</code>），Eureka Server通过集群中的副本之间相互注册，相互同步服务注册信息来达到高可用。</p>
+<p>我们需要准备两个配置文件<code>application-replica1.properties</code>和<code>application-replica2.properties</code>，两个文件内容分别如下：</p>
+<ul>
+<li><code>application-replica1.properties</code>：</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"># Spring application</span><br><span class="line">spring.application.name=springcloud-eureka</span><br><span class="line"></span><br><span class="line">server.port=8761</span><br><span class="line"></span><br><span class="line"># Spring cloud eureka instance</span><br><span class="line">eureka.instance.hostname=replica1</span><br><span class="line"></span><br><span class="line"># Spring cloud eureka client</span><br><span class="line">eureka.client.service-url.defaultZone=http://replica2:8762/eureka/</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>application-replica2.properties</code>：</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"># Spring application</span><br><span class="line">spring.application.name=springcloud-eureka</span><br><span class="line"></span><br><span class="line">server.port=8762</span><br><span class="line"></span><br><span class="line"># Spring cloud eureka instance</span><br><span class="line">eureka.instance.hostname=replica2</span><br><span class="line"></span><br><span class="line"># Spring cloud eureka client</span><br><span class="line">eureka.client.service-url.defaultZone=http://replica1:8761/eureka/</span><br></pre></td></tr></table></figure>
+<p><strong><em> 注：</em></strong> 需要在<code>hosts</code>文件中添加<code>replica1</code>和<code>replica2</code>的映射，让Eureka能通过<code>hosts</code>访问的到。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"># Eureka Replica Start</span><br><span class="line">127.0.0.1 replica1</span><br><span class="line">127.0.0.1 replica2</span><br><span class="line"># Eureka Replica End</span><br></pre></td></tr></table></figure>
+<p>分别将Eureka的两个副本启动起来：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">java -jar springcloud-eureka-0.0.1-SNAPSHOT.jar --spring.profiles.active=replica1</span><br><span class="line">java -jar springcloud-eureka-0.0.1-SNAPSHOT.jar --spring.profiles.active=replica2</span><br></pre></td></tr></table></figure>
+<p><img src="https://raw.githubusercontent.com/lw900925/blog-asset/master/images/_post/eureka-server-dashboard-03.png"></p>
+<p>浏览器输入<code>http://localhost:8761/</code>查看<code>replica1</code>副本的Dashboard页面，注意页面中DS Replicas下方的列表，此时多出一个<code>replica2</code>的副本，然后查看另一个副本的Dashboard页面，发现DS Replicas下方多出了<code>replica2</code>的副本。</p>
+<p><img src="https://raw.githubusercontent.com/lw900925/blog-asset/master/images/_post/eureka-server-dashboard-04.png"></p>
+<p>此时可以将<code>springcloud-file-service</code>服务注册到Eureka Server集群上，修改<code>application.properties</code>配置文件如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"># Spring application</span><br><span class="line">spring.application.name=springcloud-file-service</span><br><span class="line"></span><br><span class="line"># Server port</span><br><span class="line">server.port=8000</span><br><span class="line"></span><br><span class="line">management.security.enabled=false</span><br><span class="line"></span><br><span class="line"># Spring cloud eureka discovery</span><br><span class="line">eureka.instance.prefer-ip-address=true</span><br><span class="line"></span><br><span class="line">eureka.client.service-url.defaultZone=http://replica1:8761/eureka/,http://replica2:8762/eureka/</span><br></pre></td></tr></table></figure>
+<h2 id="将配置中心注册在Eureka上"><a href="#将配置中心注册在Eureka上" class="headerlink" title="将配置中心注册在Eureka上"></a>将配置中心注册在Eureka上</h2><p>在上一片文章<a href="https://lw900925.github.io/spring-cloud/spring-cloud-config.html">Spring Cloud 微服务：Spring Cloud Config</a>中我们介绍了Spring Cloud Config的配置中心——Config Server，Config Server也可以看作一个微服务，既然是微服务，应该要支持高可用。</p>
+<p>Config Server高可用有两种部署方式，一种是直接部署成多个实例，通过Nginx等反向代理工具做负载均衡；还有一种就是通过注册到Eureka Server上实现高可用，配置方法和Eureka Client配置方法一致。</p>
+<p>需要注意的是，如果将Config Server注册到Eureka Server上，Config Client端获取配置的方式需要指定为从Eureka Server的服务清单中获取。在<code>springcloud-file-service</code>的<code>application.properties</code>文件中添加下面的配置：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">spring.cloud.config.discovery.enabled=true</span><br><span class="line">spring.cloud.config.discovery.service-id=springcloud-config-server</span><br></pre></td></tr></table></figure>
+<p>最后，附上项目源码地址：</p>
+<ul>
+<li>spring-cloud：<a href="https://github.com/lw900925/springcloud" target="_blank" rel="noopener">https://github.com/lw900925/springcloud</a></li>
+<li>spring-cloud-config-repository (github): <a href="https://github.com/lw900925/springcloud-config-repository" target="_blank" rel="noopener">https://github.com/lw900925/springcloud-config-repository</a></li>
+<li>spring-cloud-config-repository (gitlab): <a href="https://gitlab.com/lw900925/springcloud-config-repository" target="_blank" rel="noopener">https://gitlab.com/lw900925/springcloud-config-repository</a></li>
+</ul>
+<p>如果有疑问，请在下方评论区参与讨论。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/spring-cloud/spring-cloud-config.html" rel="next" title="Spring Cloud 微服务：Spring Cloud Config">
+                <i class="fa fa-chevron-left"></i> Spring Cloud 微服务：Spring Cloud Config
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/year-end-summary/2017.html" rel="prev" title="2017年终总结（一篇迟到的年终总结）">
+                2017年终总结（一篇迟到的年终总结） <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div id="lv-container" data-id="city" data-uid="MTAyMC8yODgxNC81Mzg0"></div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="/uploads/avatar.jpg" alt="大猫">
+          <p class="site-author-name" itemprop="name">大猫</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">13</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">4</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/lw900925" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/u/2644358083" target="_blank" title="Weibo">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  Weibo
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#服务注册与发现"><span class="nav-number">1.</span> <span class="nav-text">服务注册与发现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Spring-Cloud-Eureka简介"><span class="nav-number">2.</span> <span class="nav-text">Spring Cloud Eureka简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#开始构建"><span class="nav-number">3.</span> <span class="nav-text">开始构建</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Eureka-Server"><span class="nav-number">3.1.</span> <span class="nav-text">Eureka Server</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Eureka-Client"><span class="nav-number">3.2.</span> <span class="nav-text">Eureka Client</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#的高可用"><span class="nav-number">4.</span> <span class="nav-text">的高可用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#将配置中心注册在Eureka上"><span class="nav-number">5.</span> <span class="nav-text">将配置中心注册在Eureka上</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy;  2016 - 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-copyright"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">大猫</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+    <script type="text/javascript">
+      (function(d, s) {
+        var j, e = d.getElementsByTagName(s)[0];
+        if (typeof LivereTower === 'function') { return; }
+        j = d.createElement(s);
+        j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+        j.async = true;
+        e.parentNode.insertBefore(j, e);
+      })(document, 'script');
+    </script>
+  
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length == 0) {
+      search_path = "search.xml";
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.popup').toggle();
+    }
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+      $.ajax({
+        url: path,
+        dataType: "xml",
+        async: true,
+        success: function( xmlResponse ) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = $( "entry", xmlResponse ).map(function() {
+            return {
+              title: $( "title", this ).text(),
+              content: $("content",this).text(),
+              url: $( "url" , this).text()
+            };
+          }).get();
+          var $input = document.getElementById(search_id);
+          var $resultContent = document.getElementById(content_id);
+          $input.addEventListener('input', function(){
+            var matchcounts = 0;
+            var str='<ul class=\"search-result-list\">';
+            var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+            $resultContent.innerHTML = "";
+            if (this.value.trim().length > 1) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var content_index = [];
+                var data_title = data.title.trim().toLowerCase();
+                var data_content = data.content.trim().replace(/<[^>]+>/g,"").toLowerCase();
+                var data_url = decodeURIComponent(data.url);
+                var index_title = -1;
+                var index_content = -1;
+                var first_occur = -1;
+                // only match artiles with not empty titles and contents
+                if(data_title != '') {
+                  keywords.forEach(function(keyword, i) {
+                    index_title = data_title.indexOf(keyword);
+                    index_content = data_content.indexOf(keyword);
+                    if( index_title >= 0 || index_content >= 0 ){
+                      isMatch = true;
+                      if (i == 0) {
+                        first_occur = index_content;
+                      }
+                    }
+
+                  });
+                }
+                // show search results
+                if (isMatch) {
+                  matchcounts += 1;
+                  str += "<li><a href='"+ data_url +"' class='search-result-title'>"+ data_title +"</a>";
+                  var content = data.content.trim().replace(/<[^>]+>/g,"");
+                  if (first_occur >= 0) {
+                    // cut out 100 characters
+                    var start = first_occur - 20;
+                    var end = first_occur + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if(start == 0){
+                      end = 50;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    var match_content = content.substring(start, end);
+                    // highlight all keywords
+                    keywords.forEach(function(keyword){
+                      var regS = new RegExp(keyword, "gi");
+                      match_content = match_content.replace(regS, "<b class=\"search-keyword\">"+keyword+"</b>");
+                    });
+
+                    str += "<p class=\"search-result\">" + match_content +"...</p>"
+                  }
+                  str += "</li>";
+                }
+              })};
+            str += "</ul>";
+            if (matchcounts == 0) { str = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>' }
+            if (keywords == "") { str = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>' }
+            $resultContent.innerHTML = str;
+          });
+          proceedsearch();
+        }
+      });}
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched == false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(function(e){
+      $('.popup').hide();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    });
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

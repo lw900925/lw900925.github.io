@@ -1,0 +1,969 @@
+<!doctype html>
+
+
+
+
+<html class="theme-next pisces" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="java8">
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0">
+
+
+
+
+
+
+<meta name="description" content="在上一篇介绍Stream流式数据处理的文章中提到了Optional类，这是Java 8新增的一个类，用以解决程序中常见的NullPointerException异常问题。本篇文章将详细介绍Optional类，以及如何用它消除代码中的null检查。">
+<meta name="keywords" content="java8">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java 8新特性（三）：Optional类">
+<meta property="og:url" content="https://lw900925.github.io/java/java8-optional.html">
+<meta property="og:site_name" content="余斗 阝日">
+<meta property="og:description" content="在上一篇介绍Stream流式数据处理的文章中提到了Optional类，这是Java 8新增的一个类，用以解决程序中常见的NullPointerException异常问题。本篇文章将详细介绍Optional类，以及如何用它消除代码中的null检查。">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://raw.githubusercontent.com/lw900925/blog-asset/master/images/banner/java8-logo.jpeg">
+<meta property="og:updated_time" content="2021-08-09T04:02:20.017Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Java 8新特性（三）：Optional类">
+<meta name="twitter:description" content="在上一篇介绍Stream流式数据处理的文章中提到了Optional类，这是Java 8新增的一个类，用以解决程序中常见的NullPointerException异常问题。本篇文章将详细介绍Optional类，以及如何用它消除代码中的null检查。">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/lw900925/blog-asset/master/images/banner/java8-logo.jpeg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: false,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://lw900925.github.io/java/java8-optional.html">
+
+
+<meta name="baidu-site-verification" content="oso5Gb5GqD">
+<meta name="google-site-verification" content="4JxuSe7vpA5jMMjMwU5V4-VUcZTlFBK3DfJvxuzkJi8">
+
+  <title> Java 8新特性（三）：Optional类 | 余斗 阝日 </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//tajs.qq.com/stats?sId=59930119";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">余斗 阝日</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">这个人很懒，什么都没写……</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="https://lw900925.github.io/java/java8-optional.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="大猫">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/uploads/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="余斗 阝日">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Java 8新特性（三）：Optional类
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-01-03T00:00:00+00:00">
+                2017-01-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/java/" itemprop="url" rel="index">
+                    <span itemprop="name">java</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p><img src="https://raw.githubusercontent.com/lw900925/blog-asset/master/images/banner/java8-logo.jpeg"></p>
+<p>在上一篇介绍Stream流式数据处理的文章中提到了<code>Optional</code>类，这是Java 8新增的一个类，用以解决程序中常见的<code>NullPointerException</code>异常问题。本篇文章将详细介绍<code>Optional</code>类，以及如何用它消除代码中的<code>null</code>检查。</p>
+<a id="more"></a>
+<h2 id="避免使用null检查"><a href="#避免使用null检查" class="headerlink" title="避免使用null检查"></a>避免使用<code>null</code>检查</h2><p>作为Java开发人员，几乎所有人都遇到过<code>NullPointerException</code>异常，大多数人遇到<code>NullPointerException</code>异常时都会在异常出现的地方加上<code>if</code>代码块来判断值不为空，比如下面的代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">bindUserToRole</span><span class="params">(User user)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (user != <span class="keyword">null</span>) &#123;</span><br><span class="line">        String roleId = user.getRoleId();</span><br><span class="line">        <span class="keyword">if</span> (roleId != <span class="keyword">null</span>) &#123;</span><br><span class="line">            Role role = roleDao.findOne(roleId);</span><br><span class="line">            <span class="keyword">if</span> (role != <span class="keyword">null</span>) &#123;</span><br><span class="line">                role.setUserId(user.getUserId());</span><br><span class="line">                roleDao.save(role);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这是比较普遍的做法，为了避免出现<code>NullPointerException</code>异常，手动对可能为<code>null</code>值进行了处理，只不过代码可读性就没那么好，业务逻辑都被淹没在<code>if</code>逻辑判断中，重构一下看起来会好一点：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">bindUserToRole</span><span class="params">(User user)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (user == <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    String roleId = user.getRoleId();</span><br><span class="line">    <span class="keyword">if</span> (roleId == <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    Role = roleDao.findOne(roleId);</span><br><span class="line">    <span class="keyword">if</span> (role != <span class="keyword">null</span>) &#123;</span><br><span class="line">        role.setUserId(user.getUserId());</span><br><span class="line">        roleDao.save(role);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上面的代码避免了深层的<code>if</code>语句嵌套，但本质上是一样的，方法内有三个不同的返回点，出错后调试也不容易，你都不知道是那个值导致了<code>NullPointerException</code>异常。</p>
+<p>基于上面的原因，Java 8中引入了一个新的类<code>Optional</code>，用以避免使用<code>null</code>值引发的种种问题。</p>
+<h2 id="Optional类"><a href="#Optional类" class="headerlink" title="Optional类"></a><code>Optional</code>类</h2><p><code>java.util.Optional&lt;T&gt;</code>类是一个封装了<code>Optional</code>值的容器对象，<code>Optional</code>值可以为<code>null</code>，如果值存在，调用<code>isPresent()</code>方法返回<code>true</code>，调用<code>get()</code>方法可以获取值。</p>
+<h3 id="创建Optional对象"><a href="#创建Optional对象" class="headerlink" title="创建Optional对象"></a>创建<code>Optional</code>对象</h3><p><code>Optional</code>类提供类三个方法用于实例化一个<code>Optional</code>对象，它们分别为<code>empty()</code>、<code>of()</code>、<code>ofNullable()</code>，这三个方法都是静态方法，可以直接调用。</p>
+<hr>
+<p><code>empty()</code>方法用于创建一个没有值的<code>Optional</code>对象：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Optional&lt;String&gt; emptyOpt = Optional.empty();</span><br></pre></td></tr></table></figure>
+<p><code>empty()</code>方法创建的对象没有值，如果对<code>emptyOpt</code>变量调用<code>isPresent()</code>方法会返回<code>false</code>，调用<code>get()</code>方法抛出<code>NullPointerException</code>异常。</p>
+<hr>
+<p><code>of()</code>方法使用一个非空的值创建<code>Optional</code>对象：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">String str = <span class="string">"Hello World"</span>;</span><br><span class="line">Optional&lt;String&gt; notNullOpt = Optional.of(str);</span><br></pre></td></tr></table></figure>
+<hr>
+<p><code>ofNullable()</code>方法接收一个可以为<code>null</code>的值：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Optional&lt;String&gt; nullableOpt = Optional.ofNullable(str);</span><br></pre></td></tr></table></figure>
+<p>如果<code>str</code>的值为<code>null</code>，得到的<code>nullableOpt</code>是一个没有值的<code>Optional</code>对象。</p>
+<h3 id="提取Optional对象中的值"><a href="#提取Optional对象中的值" class="headerlink" title="提取Optional对象中的值"></a>提取<code>Optional</code>对象中的值</h3><p>如果我们要获取<code>User</code>对象中的<code>roleId</code>属性值，常见的方式是直接获取：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">String roleId = <span class="keyword">null</span>;</span><br><span class="line"><span class="keyword">if</span> (user != <span class="keyword">null</span>) &#123;</span><br><span class="line">    roleId = user.getRoleId();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>使用<code>Optional</code>中提供的<code>map()</code>方法可以以更简单的方式实现：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Optional&lt;User&gt; userOpt = Optional.ofNullable(user);</span><br><span class="line">Optional&lt;String&gt; roleIdOpt = userOpt.map(User::getRoleId);</span><br></pre></td></tr></table></figure>
+<p><code>map()</code>方法与Stream API中的<code>map()</code>一样，类似于映射操作，将原始类型映射为一个新的类型。</p>
+<h3 id="使用orElse-方法获取值"><a href="#使用orElse-方法获取值" class="headerlink" title="使用orElse()方法获取值"></a>使用<code>orElse()</code>方法获取值</h3><p><code>Optional</code>类还包含其他方法用于获取值，这些方法分别为：</p>
+<ul>
+<li><code>orElse()</code>：如果有值就返回，否则返回一个给定的值作为默认值；</li>
+<li><code>orElseGet()</code>：与<code>orElse()</code>方法作用类似，区别在于生成默认值的方式不同。该方法接受一个<code>Supplier&lt;? extends T&gt;</code>函数式接口参数，用于生成默认值；</li>
+<li><code>orElseThrow()</code>：与前面介绍的<code>get()</code>方法类似，当值为<code>null</code>时调用这两个方法都会抛出<code>NullPointerException</code>异常，区别在于该方法可以指定抛出的异常类型。</li>
+</ul>
+<p>下面来看看这三个方法的具体用法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">String str = <span class="string">"Hello World"</span>;</span><br><span class="line">Optional&lt;String&gt; strOpt = Optional.of(str);</span><br><span class="line">String orElseResult = strOpt.orElse(<span class="string">"Hello Shanghai"</span>);</span><br><span class="line">String orElseGet = strOpt.orElseGet(() -&gt; <span class="string">"Hello Shanghai"</span>);</span><br><span class="line">String orElseThrow = strOpt.orElseThrow(() -&gt; <span class="keyword">new</span> IllegalArgumentException(<span class="string">"Argument 'str' cannot be null or blank."</span>));</span><br></pre></td></tr></table></figure>
+<p>此外，<code>Optional</code>类还提供了一个<code>ifPresent()</code>方法，该方法接收一个<code>Consumer&lt;? super T&gt;</code>函数式接口，可以对值进行一些操作：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Optional&lt;String&gt; strOpt = Optional.of(<span class="string">"Hello World"</span>);</span><br><span class="line">strOpt.ifPresent(System.out::println);</span><br></pre></td></tr></table></figure>
+<h3 id="使用filter-方法过滤"><a href="#使用filter-方法过滤" class="headerlink" title="使用filter()方法过滤"></a>使用<code>filter()</code>方法过滤</h3><p><code>filter()</code>方法可用于判断<code>Optional</code>对象是否满足给定条件，一般用于条件过滤：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Optional&lt;String&gt; optional = Optional.of(<span class="string">"lw900925@163.com"</span>);</span><br><span class="line">optional = optional.filter(str -&gt; str.contains(<span class="string">"164"</span>));</span><br></pre></td></tr></table></figure>
+<p>在上面的代码中，如果<code>filter()</code>方法中的Lambda表达式成立，<code>filter()</code>方法会返回当前<code>Optional</code>对象值，否则，返回一个值为空的<code>Optional</code>对象。</p>
+<h2 id="如何正确使用Optional"><a href="#如何正确使用Optional" class="headerlink" title="如何正确使用Optional"></a>如何正确使用<code>Optional</code></h2><p>我发现好像很多人（别说还真的很多）没有掌握<code>Optional</code>的正确使用方法，比如我一个同事喜欢写这样的<code>Optional</code>代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Optional&lt;User&gt; userOpt = Optional.ofNullable(user);</span><br><span class="line"><span class="keyword">if</span> (userOpt.isPresent()) &#123;</span><br><span class="line">    User user = userOpt.get();</span><br><span class="line">    <span class="comment">// do something...</span></span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="comment">// do something...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>说实话，这样的写法跟传统的<code>if</code>语句判断空值没有任何区别，没有起到<code>Optional</code>的正真作用（中枪的同学举手）：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (user != <span class="keyword">null</span>) &#123;</span><br><span class="line">    <span class="comment">// do something...</span></span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="comment">// do something...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>所以，当我们从之前版本切换到Java 8的时候，不应该还按照以前的思维方式处理<code>null</code>值，Java 8提倡函数式编程，新增的许多API都可以用函数式编程表示，<code>Optional</code>类也是其中之一。这里有几条关于<code>Optional</code>使用的建议：</p>
+<ol>
+<li>尽量避免在程序中直接调用<code>Optional</code>对象的<code>get()</code>和<code>isPresent()</code>方法；</li>
+<li>避免使用<code>Optional</code>类型声明实体类的属性；</li>
+</ol>
+<p>第一条建议中直接调用<code>get()</code>方法是很危险的做法，如果<code>Optional</code>的值为空，那么毫无疑问会抛出<code>NullPointerException</code>异常，而为了调用<code>get()</code>方法而使用<code>isPresent()</code>方法作为空值检查，这种做法与传统的用<code>if</code>语句块做空值检查没有任何区别。</p>
+<p>第二条建议避免使用<code>Optional</code>作为实体类的属性，它在设计的时候就没有考虑过用来作为类的属性，可以查看<code>Optional</code>的源代码，你会发现它没有实现<code>java.io.Serializable</code>接口，也就是说如果你用到一些orm框架的二级缓存，使用<code>Optional</code>作为实体类的属性没法被序列化。</p>
+<p>下面我们通过一些例子讲解<code>Optional</code>的正确用法：</p>
+<h3 id="正确创建Optional对象"><a href="#正确创建Optional对象" class="headerlink" title="正确创建Optional对象"></a>正确创建<code>Optional</code>对象</h3><p>上面提到创建<code>Optional</code>对象有三个方法，<code>empty()</code>方法比较简单，没什么特别要说明的。主要是<code>of()</code>和<code>ofNullable()</code>方法。当你很确定一个对象不可能为<code>null</code>的时候，应该使用<code>of()</code>方法，否则，尽可能使用<code>ofNullable()</code>方法，比如：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">method</span><span class="params">(Role role)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 当Optional的值通过常量获得或者通过关键字new初始化，可以直接使用of()方法</span></span><br><span class="line">    Optional&lt;String&gt; strOpt = Optional.of(<span class="string">"Hello World"</span>);</span><br><span class="line">    Optional&lt;User&gt; userOpt = Optional.of(<span class="keyword">new</span> User());</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 方法参数中role值不确定是否为null，使用ofNullable()方法创建</span></span><br><span class="line">    Optional&lt;Role&gt; roleOpt = Optional.ofNullable(role);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="orElse-方法的使用"><a href="#orElse-方法的使用" class="headerlink" title="orElse()方法的使用"></a><code>orElse()</code>方法的使用</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">return</span> str != <span class="keyword">null</span> ? str : <span class="string">"Hello World"</span></span><br></pre></td></tr></table></figure>
+<p>上面的代码表示判断字符串<code>str</code>是否为空，不为空就返回，否则，返回一个常量。使用<code>Optional</code>类可以表示为：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">return</span> strOpt.orElse(<span class="string">"Hello World"</span>)</span><br></pre></td></tr></table></figure>
+<h3 id="简化if-else"><a href="#简化if-else" class="headerlink" title="简化if-else"></a>简化<code>if-else</code></h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">User user = ...</span><br><span class="line"><span class="keyword">if</span> (user != <span class="keyword">null</span>) &#123;</span><br><span class="line">    String userName = user.getUserName();</span><br><span class="line">    <span class="keyword">if</span> (userName != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> userName.toUpperCase();</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上面的代码可以简化成：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">User user = ...</span><br><span class="line">Optional&lt;User&gt; userOpt = Optional.ofNullable(user);</span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span> userOpt.map(User::getUserName)</span><br><span class="line">            .map(String::toUpperCase)</span><br><span class="line">            .orElse(<span class="keyword">null</span>);</span><br></pre></td></tr></table></figure>
+<p>再比如判断用户名不能重复的逻辑，根据用户名从数据库中查询一个用户，如果不为null就抛出异常告诉前端用户已存在：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">User existUser = userDAO.findById(user.getUsername());</span><br><span class="line"><span class="keyword">if</span> (existUser != <span class="keyword">null</span>) &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> AppException(<span class="string">"用户名已存在"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以简写为：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">User user = userDAO.findById(user.getId());</span><br><span class="line">Optional.ofNullable(user).ifPresent(it -&gt; <span class="keyword">throw</span> <span class="keyword">new</span> AppException(<span class="string">"用户名已存在"</span>));</span><br></pre></td></tr></table></figure>
+<p>总结一下，新的<code>Optional</code>类让我们可以以函数式编程的方式处理<code>null</code>值而不用嵌套很多<code>if-else</code>逻辑。下一篇文章将介绍Java 8中新添加的日期API。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/java/java8-stream-api.html" rel="next" title="Java 8新特性（二）：Stream API">
+                <i class="fa fa-chevron-left"></i> Java 8新特性（二）：Stream API
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/java/java8-newtime-api.html" rel="prev" title="Java 8新特性（四）：新的时间和日期API">
+                Java 8新特性（四）：新的时间和日期API <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div id="lv-container" data-id="city" data-uid="MTAyMC8yODgxNC81Mzg0"></div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="/uploads/avatar.jpg" alt="大猫">
+          <p class="site-author-name" itemprop="name">大猫</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">13</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">4</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/lw900925" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/u/2644358083" target="_blank" title="Weibo">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  Weibo
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#避免使用null检查"><span class="nav-number">1.</span> <span class="nav-text">避免使用null检查</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Optional类"><span class="nav-number">2.</span> <span class="nav-text">Optional类</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#创建Optional对象"><span class="nav-number">2.1.</span> <span class="nav-text">创建Optional对象</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#提取Optional对象中的值"><span class="nav-number">2.2.</span> <span class="nav-text">提取Optional对象中的值</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用orElse-方法获取值"><span class="nav-number">2.3.</span> <span class="nav-text">使用orElse()方法获取值</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用filter-方法过滤"><span class="nav-number">2.4.</span> <span class="nav-text">使用filter()方法过滤</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#如何正确使用Optional"><span class="nav-number">3.</span> <span class="nav-text">如何正确使用Optional</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#正确创建Optional对象"><span class="nav-number">3.1.</span> <span class="nav-text">正确创建Optional对象</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#orElse-方法的使用"><span class="nav-number">3.2.</span> <span class="nav-text">orElse()方法的使用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#简化if-else"><span class="nav-number">3.3.</span> <span class="nav-text">简化if-else</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy;  2016 - 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-copyright"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">大猫</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+    <script type="text/javascript">
+      (function(d, s) {
+        var j, e = d.getElementsByTagName(s)[0];
+        if (typeof LivereTower === 'function') { return; }
+        j = d.createElement(s);
+        j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+        j.async = true;
+        e.parentNode.insertBefore(j, e);
+      })(document, 'script');
+    </script>
+  
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length == 0) {
+      search_path = "search.xml";
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.popup').toggle();
+    }
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+      $.ajax({
+        url: path,
+        dataType: "xml",
+        async: true,
+        success: function( xmlResponse ) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = $( "entry", xmlResponse ).map(function() {
+            return {
+              title: $( "title", this ).text(),
+              content: $("content",this).text(),
+              url: $( "url" , this).text()
+            };
+          }).get();
+          var $input = document.getElementById(search_id);
+          var $resultContent = document.getElementById(content_id);
+          $input.addEventListener('input', function(){
+            var matchcounts = 0;
+            var str='<ul class=\"search-result-list\">';
+            var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+            $resultContent.innerHTML = "";
+            if (this.value.trim().length > 1) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var content_index = [];
+                var data_title = data.title.trim().toLowerCase();
+                var data_content = data.content.trim().replace(/<[^>]+>/g,"").toLowerCase();
+                var data_url = decodeURIComponent(data.url);
+                var index_title = -1;
+                var index_content = -1;
+                var first_occur = -1;
+                // only match artiles with not empty titles and contents
+                if(data_title != '') {
+                  keywords.forEach(function(keyword, i) {
+                    index_title = data_title.indexOf(keyword);
+                    index_content = data_content.indexOf(keyword);
+                    if( index_title >= 0 || index_content >= 0 ){
+                      isMatch = true;
+                      if (i == 0) {
+                        first_occur = index_content;
+                      }
+                    }
+
+                  });
+                }
+                // show search results
+                if (isMatch) {
+                  matchcounts += 1;
+                  str += "<li><a href='"+ data_url +"' class='search-result-title'>"+ data_title +"</a>";
+                  var content = data.content.trim().replace(/<[^>]+>/g,"");
+                  if (first_occur >= 0) {
+                    // cut out 100 characters
+                    var start = first_occur - 20;
+                    var end = first_occur + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if(start == 0){
+                      end = 50;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    var match_content = content.substring(start, end);
+                    // highlight all keywords
+                    keywords.forEach(function(keyword){
+                      var regS = new RegExp(keyword, "gi");
+                      match_content = match_content.replace(regS, "<b class=\"search-keyword\">"+keyword+"</b>");
+                    });
+
+                    str += "<p class=\"search-result\">" + match_content +"...</p>"
+                  }
+                  str += "</li>";
+                }
+              })};
+            str += "</ul>";
+            if (matchcounts == 0) { str = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>' }
+            if (keywords == "") { str = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>' }
+            $resultContent.innerHTML = str;
+          });
+          proceedsearch();
+        }
+      });}
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched == false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(function(e){
+      $('.popup').hide();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    });
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

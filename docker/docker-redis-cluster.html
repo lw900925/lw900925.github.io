@@ -1,0 +1,950 @@
+<!doctype html>
+
+
+
+
+<html class="theme-next pisces" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="Docker">
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0">
+
+
+
+
+
+
+<meta name="description" content="虽然其他网站上有大量关于Docker创建Redis集群的文章，但大多数都比较片面（感觉还是无脑复制粘贴，错误百出），所以决定重新整理一下，把遇到的问题都记录下来。">
+<meta name="keywords" content="Docker">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Docker：创建Redis集群">
+<meta property="og:url" content="https://lw900925.github.io/docker/docker-redis-cluster.html">
+<meta property="og:site_name" content="余斗 阝日">
+<meta property="og:description" content="虽然其他网站上有大量关于Docker创建Redis集群的文章，但大多数都比较片面（感觉还是无脑复制粘贴，错误百出），所以决定重新整理一下，把遇到的问题都记录下来。">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://raw.githubusercontent.com/lw900925/blog-asset/master/images/banner/docker-logo.jpeg">
+<meta property="og:updated_time" content="2021-08-09T04:02:20.017Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Docker：创建Redis集群">
+<meta name="twitter:description" content="虽然其他网站上有大量关于Docker创建Redis集群的文章，但大多数都比较片面（感觉还是无脑复制粘贴，错误百出），所以决定重新整理一下，把遇到的问题都记录下来。">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/lw900925/blog-asset/master/images/banner/docker-logo.jpeg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: false,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://lw900925.github.io/docker/docker-redis-cluster.html">
+
+
+<meta name="baidu-site-verification" content="oso5Gb5GqD">
+<meta name="google-site-verification" content="4JxuSe7vpA5jMMjMwU5V4-VUcZTlFBK3DfJvxuzkJi8">
+
+  <title> Docker：创建Redis集群 | 余斗 阝日 </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//tajs.qq.com/stats?sId=59930119";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">余斗 阝日</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">这个人很懒，什么都没写……</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="https://lw900925.github.io/docker/docker-redis-cluster.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="大猫">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/uploads/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="余斗 阝日">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Docker：创建Redis集群
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-03-10T00:00:00+00:00">
+                2017-03-10
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/docker/" itemprop="url" rel="index">
+                    <span itemprop="name">docker</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p><img src="https://raw.githubusercontent.com/lw900925/blog-asset/master/images/banner/docker-logo.jpeg"></p>
+<p>虽然其他网站上有大量关于Docker创建Redis集群的文章，但大多数都比较片面（感觉还是无脑复制粘贴，错误百出），所以决定重新整理一下，把遇到的问题都记录下来。</p>
+<a id="more"></a>
+<h2 id="获取Redis镜像"><a href="#获取Redis镜像" class="headerlink" title="获取Redis镜像"></a>获取Redis镜像</h2><p>首先从Docker Hub或其他镜像仓库中获取Redis镜像，这里我使用了Docker官方提供的Redis镜像，运行下面命令获取Redis镜像：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sudo docker pull ubuntu</span><br><span class="line">sudo docker pull redis</span><br></pre></td></tr></table></figure>
+<p>镜像下载完毕后，执行<code>sudo docker images</code>命令查看结果：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">REPOSITORY                   TAG                 IMAGE ID            CREATED             SIZE</span><br><span class="line">redis                        latest              e4a35914679d        9 days ago          183 MB</span><br><span class="line">ubuntu                       latest              0ef2e08ed3fa        10 days ago         130 MB</span><br></pre></td></tr></table></figure>
+<p>可以看到<code>redis</code>和<code>ubuntu</code>两个镜像已经获取成功，下面开始配置。</p>
+<h2 id="配置Redis集群"><a href="#配置Redis集群" class="headerlink" title="配置Redis集群"></a>配置Redis集群</h2><p>在配置Redis集群之前，需要一个<code>redis.conf</code>的配置文件，该配置文件可以从Redis官方站点获取：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wget -c http://download.redis.io/redis-stable/redis.conf</span><br></pre></td></tr></table></figure>
+<p>等待下载完毕后，将<code>redis.conf</code>拷贝三份，并依次重命名为：<code>redis-master.conf</code>，<code>redis-slave1.conf</code>，<code>redis-slave2.conf</code>，将三个文件放在<code>/home/liuwei/docker/redis/</code>目录中，看起来像这样：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">/home/liuwei/docker/redis/redis-master.conf</span><br><span class="line">/home/liuwei/docker/redis/redis-slave1.conf</span><br><span class="line">/home/liuwei/docker/redis/redis-slave2.conf</span><br></pre></td></tr></table></figure>
+<p><strong>注</strong>：这三个文件存放的位置无特殊要求，可以指定任意位置。</p>
+<p>将<code>redis-master.conf</code>文件中的配置项做如下修改：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">daemonize yes</span><br><span class="line">pidfile /var/run/redis.pid</span><br></pre></td></tr></table></figure>
+<p>将<code>redis-slave1.conf</code>和<code>redis-slave2.conf</code>文件中的配置项做如下修改：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">daemonize yes</span><br><span class="line">pidfile /var/run/redis.pid</span><br><span class="line">slaveof master 6379</span><br></pre></td></tr></table></figure>
+<p><code>slaveof</code>默认是注释掉的，只需要开启注释即可。需要注意的是<code>slaveof</code>的格式为<code>slaveof &lt;masterip&gt; &lt;masterport&gt;</code>，上面配置中<code>masterip</code>参数为<code>master</code>，实际上是一个别名，稍后会对它进行解释。配置完成后，下一步就是创建Docker容器并启动了。</p>
+<h2 id="创建Redis容器"><a href="#创建Redis容器" class="headerlink" title="创建Redis容器"></a>创建Redis容器</h2><p>创建Redis容器只需要使用第一步下载好的Redis镜像，调用Docker的<code>run</code>命令即可，不过要创建一个Redis集群，还需要处理容器与容器之间的通信问题（即Redis的主从复制需要容器之间能够相互连通），这里使用<code>docker run</code>命令的<code>--link</code>参数来建立容器之间的相互连通。</p>
+<p>简单介绍一下<code>--link</code>这个参数，<code>--link</code>的使用格式为：<code>name:alias</code>，可以在<code>docker run</code>命令中重复使用该参数，例如：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sudo docker run -it --name ubuntu ubuntu /bin/bash</span><br><span class="line">sudo docker run -it --name redis --link ubuntu:ubuntu redis /bin/bash</span><br></pre></td></tr></table></figure>
+<p>上述命令将使用镜像创建一个名为<code>ubuntu</code>容器，然后创建一个名为<code>redis</code>的容器，将该容器连接到<code>ubuntu</code>容器上。通过<code>--link</code>参数连接的两个容器，可以避免容器的IP和端口暴露到外网导致的安全问题，以及容器在重启后IP地址变化导致访问失效。当容器的IP发生变化时，Docker会自动维护容器中的hosts文件，如果你打开两个通过<code>--link</code>参数连接的容器中的某个容器的<code>/etc/hosts</code>文件，你将看到如下内容：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">127.0.0.1	localhost</span><br><span class="line">::1	localhost ip6-localhost ip6-loopback</span><br><span class="line">fe00::0	ip6-localnet</span><br><span class="line">ff00::0	ip6-mcastprefix</span><br><span class="line">ff02::1	ip6-allnodes</span><br><span class="line">ff02::2	ip6-allrouters</span><br><span class="line"><span class="comment"># 以下记录了容器的连接信息</span></span><br><span class="line">172.17.0.2	master 385f6821c0db redis-master</span><br><span class="line">172.17.0.3	54466fb83744</span><br></pre></td></tr></table></figure>
+<p>通过<code>--link</code>参数，我们可以创建包含一个<code>master</code>和两个<code>slave</code>的Redis集群，使用如下命令创建：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">sudo docker run -it -v /home/liuwei/docker/redis/redis-master.conf:/usr/<span class="built_in">local</span>/etc/redis/redis.conf --name redis-master redis /bin/bash</span><br><span class="line">sudo docker run -it -v /home/liuwei/docker/redis/redis-slave1.conf:/usr/<span class="built_in">local</span>/etc/redis/redis.conf --name redis-slave1 --link redis-master:master redis /bin/bash</span><br><span class="line">sudo docker run -it -v /home/liuwei/docker/redis/redis-slave2.conf:/usr/<span class="built_in">local</span>/etc/redis/redis.conf --name redis-slave2 --link redis-master:master redis /bin/bash</span><br></pre></td></tr></table></figure>
+<p>上述命令中使用<code>--link redis-master:master</code>参数，前面提到的<code>redis-slave.conf</code>配置文件中<code>slaveof</code>配置项，这里使用了一个<code>master</code>作为别名，其效果和使用IP一样（IP地址在<code>/etc/host</code>文件中）。</p>
+<p>需要注意的是<code>-v</code>参数，<code>-v</code>参数用于将宿主机上的某个目录挂载到容器中。由于容器都是轻量化设计，只包含运行时的必须文件，所以在容器中使用<code>vim</code>之类的命令很不方便（可能需要自行安装vim编辑器），所以我们将之前配置好的<code>redis.conf</code>文件挂载到对应的容器中。因此，我们可以直接在宿主机上使用<code>vim</code>命令或其他文本编辑器编辑<code>redis.conf</code>文件。</p>
+<p><code>-v</code>的格式为：<code>-v /host/path:/container/path</code>，前部分表示主机的目录，后部分表示容器的目录（如果目录不存在，容器启动的时候会自行创建）。</p>
+<p>容器启动完毕后，可以运行<code>sudo docker ps</code>查看容器启动状态：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                    NAMES</span><br><span class="line">d2b29622b98d        redis               &quot;docker-entrypoint...&quot;   3 hours ago         Up 3 hours          6379/tcp                 redis-slave2</span><br><span class="line">54466fb83744        redis               &quot;docker-entrypoint...&quot;   3 hours ago         Up 3 hours          6379/tcp                 redis-slave1</span><br><span class="line">385f6821c0db        redis               &quot;docker-entrypoint...&quot;   3 hours ago         Up 3 hours          6379/tcp                 redis-master</span><br></pre></td></tr></table></figure>
+<p>接下来是启动<code>redis</code>服务，这里推荐为每个容器分配一个<code>shell</code>窗口，方便直接在容器内执行命令。先启动<code>master</code>，然后启动<code>slaver</code>。分别在<code>master</code>、<code>slave1</code>和<code>slave2</code>中运行启动<code>redis</code>服务的命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">redis-server /usr/<span class="built_in">local</span>/etc/redis/redis.conf</span><br></pre></td></tr></table></figure>
+<p>启动后，在<code>master</code>容器中执行下面的命令查看<code>redis</code>服务的运行状态：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">redis-cli</span><br><span class="line">127.0.0.1:6379&gt; info</span><br></pre></td></tr></table></figure>
+<p>结果为：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 此处已省略</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Replication</span></span><br><span class="line">role:master</span><br><span class="line">connected_slaves:2</span><br><span class="line">slave0:ip=172.17.0.4,port=6379,state=online,offset=29,lag=1</span><br><span class="line">slave1:ip=172.17.0.3,port=6379,state=online,offset=29,lag=1</span><br><span class="line">master_repl_offset:29</span><br><span class="line">repl_backlog_active:1</span><br><span class="line">repl_backlog_size:1048576</span><br><span class="line">repl_backlog_first_byte_offset:2</span><br><span class="line">repl_backlog_histlen:28</span><br><span class="line"></span><br><span class="line"><span class="comment"># 此处已省略</span></span><br></pre></td></tr></table></figure>
+<p>这里有个坑需要注意一下，我在配置完毕后启动容器，运行<code>info</code>命令查看到上述信息中<code>connected_slaves</code>的值为0，测试主从复制也没有成功，后来搜索了相关资料，需要将<code>redis-master.conf</code>文件中的<code>bind 127.0.0.1</code>修改为<code>bind 0.0.0.0</code>，修改完毕后重启<code>master</code>服务即可。</p>
+<blockquote>
+<p>评论区有小伙伴提到按照上述修改<code>bind</code>属性后主从依然无法连通，可以尝试将<code>redis-slave1.conf</code>和<code>redis-slave2.conf</code>两个文件都改成<code>bind 0.0.0.0</code>。</p>
+</blockquote>
+<p>可以看到<code>master</code>中已经包含两个<code>slave</code>，接下来我们测试一下主从复制是否成功，在<code>master</code>容器中输入下面的命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">127.0.0.1:6379&gt; <span class="built_in">set</span> master liuwei</span><br><span class="line">OK</span><br><span class="line">127.0.0.1:6379&gt; get master</span><br><span class="line"><span class="string">"liuwei"</span></span><br></pre></td></tr></table></figure>
+<p>然后分别在<code>slave1</code>和<code>slave2</code>容器中执行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">127.0.0.1:6379&gt; get master</span><br><span class="line"><span class="string">"liuwei"</span></span><br></pre></td></tr></table></figure>
+<p>如果能成功看到输出信息，说明主从复制成功。</p>
+<p>相比使用虚拟机搭建Redis集群环境，Docker显得更简单轻量，如果需要配置更多<code>slave</code>，只需要使用命令创建一个容器，连接到<code>master</code>容器。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/docker/docker-springboot.html" rel="next" title="Docker：Spring Boot应用发布到Docker">
+                <i class="fa fa-chevron-left"></i> Docker：Spring Boot应用发布到Docker
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/docker/docker-compose-getting-started.html" rel="prev" title="Docker：容器编排利器Compose（起步篇）">
+                Docker：容器编排利器Compose（起步篇） <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div id="lv-container" data-id="city" data-uid="MTAyMC8yODgxNC81Mzg0"></div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="/uploads/avatar.jpg" alt="大猫">
+          <p class="site-author-name" itemprop="name">大猫</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">13</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">4</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/lw900925" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/u/2644358083" target="_blank" title="Weibo">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  Weibo
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#获取Redis镜像"><span class="nav-number">1.</span> <span class="nav-text">获取Redis镜像</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#配置Redis集群"><span class="nav-number">2.</span> <span class="nav-text">配置Redis集群</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#创建Redis容器"><span class="nav-number">3.</span> <span class="nav-text">创建Redis容器</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy;  2016 - 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-copyright"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">大猫</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+    <script type="text/javascript">
+      (function(d, s) {
+        var j, e = d.getElementsByTagName(s)[0];
+        if (typeof LivereTower === 'function') { return; }
+        j = d.createElement(s);
+        j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+        j.async = true;
+        e.parentNode.insertBefore(j, e);
+      })(document, 'script');
+    </script>
+  
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length == 0) {
+      search_path = "search.xml";
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.popup').toggle();
+    }
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+      $.ajax({
+        url: path,
+        dataType: "xml",
+        async: true,
+        success: function( xmlResponse ) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = $( "entry", xmlResponse ).map(function() {
+            return {
+              title: $( "title", this ).text(),
+              content: $("content",this).text(),
+              url: $( "url" , this).text()
+            };
+          }).get();
+          var $input = document.getElementById(search_id);
+          var $resultContent = document.getElementById(content_id);
+          $input.addEventListener('input', function(){
+            var matchcounts = 0;
+            var str='<ul class=\"search-result-list\">';
+            var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+            $resultContent.innerHTML = "";
+            if (this.value.trim().length > 1) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var content_index = [];
+                var data_title = data.title.trim().toLowerCase();
+                var data_content = data.content.trim().replace(/<[^>]+>/g,"").toLowerCase();
+                var data_url = decodeURIComponent(data.url);
+                var index_title = -1;
+                var index_content = -1;
+                var first_occur = -1;
+                // only match artiles with not empty titles and contents
+                if(data_title != '') {
+                  keywords.forEach(function(keyword, i) {
+                    index_title = data_title.indexOf(keyword);
+                    index_content = data_content.indexOf(keyword);
+                    if( index_title >= 0 || index_content >= 0 ){
+                      isMatch = true;
+                      if (i == 0) {
+                        first_occur = index_content;
+                      }
+                    }
+
+                  });
+                }
+                // show search results
+                if (isMatch) {
+                  matchcounts += 1;
+                  str += "<li><a href='"+ data_url +"' class='search-result-title'>"+ data_title +"</a>";
+                  var content = data.content.trim().replace(/<[^>]+>/g,"");
+                  if (first_occur >= 0) {
+                    // cut out 100 characters
+                    var start = first_occur - 20;
+                    var end = first_occur + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if(start == 0){
+                      end = 50;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    var match_content = content.substring(start, end);
+                    // highlight all keywords
+                    keywords.forEach(function(keyword){
+                      var regS = new RegExp(keyword, "gi");
+                      match_content = match_content.replace(regS, "<b class=\"search-keyword\">"+keyword+"</b>");
+                    });
+
+                    str += "<p class=\"search-result\">" + match_content +"...</p>"
+                  }
+                  str += "</li>";
+                }
+              })};
+            str += "</ul>";
+            if (matchcounts == 0) { str = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>' }
+            if (keywords == "") { str = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>' }
+            $resultContent.innerHTML = str;
+          });
+          proceedsearch();
+        }
+      });}
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched == false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(function(e){
+      $('.popup').hide();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    });
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

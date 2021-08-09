@@ -1,0 +1,1031 @@
+<!doctype html>
+
+
+
+
+<html class="theme-next pisces" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="spring cloud">
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0">
+
+
+
+
+
+
+<meta name="description" content="前段时间工作太忙，博客好长时间暂停更新，正好现在空闲时间，把最近工作中学到的技术总结一下，分享给大家。 这篇文章是Spring Cloud系列的第一篇，首先从Spring Cloud Config这个项目说起吧，它是一个分布式配置中心服务，用于为分布式系统中各个微服务提供外部配置支持。">
+<meta name="keywords" content="spring cloud">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring Cloud 微服务：Spring Cloud Config">
+<meta property="og:url" content="https://lw900925.github.io/spring-cloud/spring-cloud-config.html">
+<meta property="og:site_name" content="余斗 阝日">
+<meta property="og:description" content="前段时间工作太忙，博客好长时间暂停更新，正好现在空闲时间，把最近工作中学到的技术总结一下，分享给大家。 这篇文章是Spring Cloud系列的第一篇，首先从Spring Cloud Config这个项目说起吧，它是一个分布式配置中心服务，用于为分布式系统中各个微服务提供外部配置支持。">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://raw.githubusercontent.com/lw900925/blog-asset/master/images/banner/spring-cloud-logo.jpeg">
+<meta property="og:updated_time" content="2021-08-09T04:02:20.017Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Spring Cloud 微服务：Spring Cloud Config">
+<meta name="twitter:description" content="前段时间工作太忙，博客好长时间暂停更新，正好现在空闲时间，把最近工作中学到的技术总结一下，分享给大家。 这篇文章是Spring Cloud系列的第一篇，首先从Spring Cloud Config这个项目说起吧，它是一个分布式配置中心服务，用于为分布式系统中各个微服务提供外部配置支持。">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/lw900925/blog-asset/master/images/banner/spring-cloud-logo.jpeg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: false,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://lw900925.github.io/spring-cloud/spring-cloud-config.html">
+
+
+<meta name="baidu-site-verification" content="oso5Gb5GqD">
+<meta name="google-site-verification" content="4JxuSe7vpA5jMMjMwU5V4-VUcZTlFBK3DfJvxuzkJi8">
+
+  <title> Spring Cloud 微服务：Spring Cloud Config | 余斗 阝日 </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//tajs.qq.com/stats?sId=59930119";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">余斗 阝日</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">这个人很懒，什么都没写……</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="https://lw900925.github.io/spring-cloud/spring-cloud-config.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="大猫">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/uploads/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="余斗 阝日">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Spring Cloud 微服务：Spring Cloud Config
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-08-15T00:00:00+00:00">
+                2017-08-15
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/spring-cloud/" itemprop="url" rel="index">
+                    <span itemprop="name">spring cloud</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p><img src="https://raw.githubusercontent.com/lw900925/blog-asset/master/images/banner/spring-cloud-logo.jpeg"></p>
+<p>前段时间工作太忙，博客好长时间暂停更新，正好现在空闲时间，把最近工作中学到的技术总结一下，分享给大家。</p>
+<p>这篇文章是Spring Cloud系列的第一篇，首先从Spring Cloud Config这个项目说起吧，它是一个分布式配置中心服务，用于为分布式系统中各个微服务提供外部配置支持。</p>
+<a id="more"></a>
+<h2 id="Spring-Cloud-Config简介"><a href="#Spring-Cloud-Config简介" class="headerlink" title="Spring Cloud Config简介"></a>Spring Cloud Config简介</h2><p>Spring Cloud Config项目分为两部分，客户端和服务器（简单起见，我们统一称为Config Client和Config Server）。</p>
+<p>Config Server是一个微服务应用，用于提供集中的外部配置支持，也就是我们前面提到的分布式配置中心。Config Server支持连接外部的配置仓库来管理各个微服务的配置文件，配置仓库可以是Git、Svn或本地文件系统。此外，Config Server还支持配置文件加密/解密、多仓库支持、动态刷新配置、自动推送配置等，这篇文章将会逐一介绍这些特性。</p>
+<p>Config Client是用于连接到Config Server的客户端，它也是一个微服务应用，Config Client在启动的时候从Config Server中获取对于的配置信息，然后加载到Spring容器中。</p>
+<p>下面我们来创建并启动一个Config Server，看看它是如何运行的。</p>
+<h2 id="快速开始"><a href="#快速开始" class="headerlink" title="快速开始"></a>快速开始</h2><h3 id="构建Config-Server"><a href="#构建Config-Server" class="headerlink" title="构建Config Server"></a>构建Config Server</h3><p>可以在<a href="http://start.spring.io/" target="_blank" rel="noopener">http://start.spring.io/</a>上生成一个Spring Boot项目，也可以使用Spring Tool Suite或IntelliJ IDEA等IDE创建，支持Maven和Gradle两种构建工具，这里我选择Gradle作为构建工具，采用Gradle多模块方式构建。</p>
+<p>创建一个<code>springcloud-config-server</code>的子项目，并在<code>build.gradle</code>文件中引入<code>spring-cloud-config-server</code>依赖：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">dependencies &#123;</span><br><span class="line">    compile(<span class="string">'org.springframework.cloud:spring-cloud-config-server'</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>然后在Spring Boot的启动主类中添加<code>@EnableConfigServer</code>注解，表示开启Config Server功能：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> org.matrixstudio.springcloud.config;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.springframework.boot.SpringApplication;</span><br><span class="line"><span class="keyword">import</span> org.springframework.boot.autoconfigure.SpringBootApplication;</span><br><span class="line"><span class="keyword">import</span> org.springframework.cloud.config.server.EnableConfigServer;</span><br><span class="line"></span><br><span class="line"><span class="meta">@SpringBootApplication</span></span><br><span class="line"><span class="meta">@EnableConfigServer</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ConfigServerApplication</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        SpringApplication.run(ConfigServerApplication<span class="class">.<span class="keyword">class</span>, <span class="title">args</span>)</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在<code>application.properties</code>配置文件中添加仓库配置信息：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">spring.cloud.config.server.git.uri=https://github.com/lw900925/springcloud-config-repository.git</span><br><span class="line">spring.cloud.config.server.git.search-paths=base-service</span><br><span class="line">#spring.cloud.config.server.git.username=username</span><br><span class="line">#spring.cloud.config.server.git.password=password</span><br><span class="line">spring.cloud.config.server.git.timeout=60</span><br></pre></td></tr></table></figure>
+<p><strong> 配置详解 </strong></p>
+<ul>
+<li><code>spring.cloud.config.server.git.uri</code>：Config Server需要连接的Git仓库地址</li>
+<li><code>spring.cloud.config.server.git.search-paths</code>：Config Server所连接仓库的搜索路径（你可以将不同类型服务的配置文件分别放在不同的目录中，方便管理，然后通过指定该属性让Config Server找到它们）</li>
+<li><code>spring.cloud.config.server.git.username</code>：连接到Git仓库的用户名（这里使用的仓库未public类型，所以不需要用户名和密码）</li>
+<li><code>spring.cloud.config.server.git.password</code>：连接到Git仓库的密码</li>
+<li><code>spring.cloud.config.server.git.timeout</code>：连接到Git的超时时间，单位为秒（second），默认值为5</li>
+</ul>
+<p>至此，Config Server服务搭建完毕了，现在可以在<code>springcloud-config-server</code>目录下通过执行<code>gradle bootRun</code>命令运行项目。</p>
+<h3 id="准备配置文件"><a href="#准备配置文件" class="headerlink" title="准备配置文件"></a>准备配置文件</h3><p>在上面的<code>application.properties</code>配置文件中指定了一个Github仓库地址<code>https://github.com/lw900925/springcloud-config-repository.git</code>作为配置仓库，我们需要在该仓库中添加一些配置文件以便Config Server启动后可以访问到它们。</p>
+<p>首先在仓库中创建一个<code>base-service</code>的目录，并在该目录下添加两个配置文件：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">springcloud-file-service-dev.properties</span><br><span class="line">springcloud-file-service-test.properties</span><br></pre></td></tr></table></figure>
+<p>上面两个配置文件分别表示名称为<code>springcloud-file-service</code>的微服务应用的开发环境和测试环境的配置文件（<code>springcloud-file-service</code>微服务将在后面构建），配置文件的内容为：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">spring.application.name=springcloud-file-service</span><br><span class="line"></span><br><span class="line">spring.profiles.active=dev</span><br></pre></td></tr></table></figure>
+<p><strong><em> 注 </em></strong>：<code>springcloud-file-service-test.properties</code>文件中的<code>spring.profiles.active</code>为<code>test</code>。</p>
+<p>文件添加完毕后，推送到远程仓库，就可以启动Config Server来测试了，这里使用了<code>8888</code>作为Config Server的端口，我们可以通过<code>curl</code>命令或浏览器地址栏来测试Config Server从远程Git仓库获取配置文件：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl http://localhost:8888/springcloud-file-service/dev | python -mjson.tool</span><br></pre></td></tr></table></figure>
+<p>上面的命令在Windows环境下执行需要安装Python运行环境和curl工具，如果不想安装也可以通过浏览器地址访问。上述命令执行结果为：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="attr">"name"</span>: <span class="string">"springcloud-file-service"</span>,</span><br><span class="line">    <span class="attr">"profiles"</span>: [</span><br><span class="line">        <span class="string">"dev"</span></span><br><span class="line">    ],</span><br><span class="line">    <span class="attr">"label"</span>: <span class="literal">null</span>,</span><br><span class="line">    <span class="attr">"version"</span>: <span class="literal">null</span>,</span><br><span class="line">    <span class="attr">"state"</span>: <span class="literal">null</span>,</span><br><span class="line">    <span class="attr">"propertySources"</span>: [</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="attr">"name"</span>: <span class="string">"https://github.com/lw900925/springcloud-config-repository.git/base-service/springcloud-file-service-dev.properties"</span>,</span><br><span class="line">            <span class="attr">"source"</span>: &#123;</span><br><span class="line">                <span class="attr">"spring.profiles.active"</span>: <span class="string">"dev"</span>,</span><br><span class="line">                <span class="attr">"spring.application.name"</span>: <span class="string">"springcloud-file-service"</span>,</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>也许你发现在请求的URL里包含了配置文件的名称和环境信息，Config Server正是通过这两个参数定位具体的配置文件的，Config Server会将配置文件的URL映射出来（可以在Config Server的启动日志中找到映射信息），它们的对应关系如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">/&#123;application&#125;/&#123;profile&#125;[/&#123;label&#125;]</span><br><span class="line">/&#123;application&#125;-&#123;profile&#125;.yml</span><br><span class="line">/&#123;label&#125;/&#123;application&#125;-&#123;profile&#125;.yml</span><br><span class="line">/&#123;application&#125;-&#123;profile&#125;.properties</span><br><span class="line">/&#123;label&#125;/&#123;application&#125;-&#123;profile&#125;.properties</span><br></pre></td></tr></table></figure>
+<p><code>application</code>表示微服务的名称，也就是上面请求URL中的<code>springcloud-file-service</code>；<code>profile</code>表示对于的环境，即<code>dev</code>；<code>label</code>是可选参数，表示Git分支名称，因为Config Server默认从<code>master</code>分支作获取配置文件，所以该参数可以省略，如果配置文件放在其他分支，就需要指定该参数值。</p>
+<h3 id="构建Config-Client"><a href="#构建Config-Client" class="headerlink" title="构建Config Client"></a>构建Config Client</h3><p>通过Config Server我们已经可以手动获取对应微服务应用的配置文件了，接下来通过在微服务中获取配置文件。</p>
+<p>首先需要创建一个项目，命名为<code>springcloud-file-service</code>，并在<code>build.gradle</code>文件中添加<code>spring-cloud-starter-config</code>依赖：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">dependencies &#123;</span><br><span class="line">    compile(<span class="string">'org.springframework.cloud:spring-cloud-starter-config'</span>)</span><br><span class="line"></span><br><span class="line">    compile(<span class="string">'org.springframework.boot:spring-boot-starter-actuator'</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>因为项目需要在启动的时候获取配置信息，所以需要添加<code>bootstrap.properties</code>配置文件：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">spring.application.name=springcloud-file-service</span><br><span class="line"></span><br><span class="line">spring.profiles.active=dev</span><br><span class="line"></span><br><span class="line"># Spring cloud config client</span><br><span class="line">spring.cloud.config.label=master</span><br><span class="line">spring.cloud.config.uri=http://localhost:8888</span><br></pre></td></tr></table></figure>
+<p>启动<code>springcloud-file-service</code>应用，通过访问<code>/env.json</code>路径，可以看到配置信息已经获取到：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    &quot;profiles&quot;: [</span><br><span class="line">        &quot;dev&quot;</span><br><span class="line">    ],</span><br><span class="line">    &quot;server.ports&quot;: &#123;</span><br><span class="line">        &quot;local.server.port&quot;: &quot;8000&quot;</span><br><span class="line">    &#125;,</span><br><span class="line">    &quot;configService:https://github.com/lw900925/springcloud-config-repository.git/base-service/springcloud-file-service-dev.properties&quot;: &#123;</span><br><span class="line">        &quot;spring.profiles.active&quot;: &quot;dev&quot;,</span><br><span class="line">        &quot;spring.application.name&quot;: &quot;springcloud-file-service&quot;</span><br><span class="line">    &#125;,</span><br><span class="line"></span><br><span class="line">    // 以下部分省略</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="Config-Server多仓库支持"><a href="#Config-Server多仓库支持" class="headerlink" title="Config Server多仓库支持"></a>Config Server多仓库支持</h2><p>由于一些复杂的需求，配置文件往往分布在不同的Git仓库中，Config Server支持多仓库的配置，我们可以将生产、开发、测试环境的配置文件分别放在不同的Git仓库，需要在<code>springcloud-config-server</code>应用中的<code>application.properties</code>配置文件中添加如下配置：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"># Spring cloud config server</span><br><span class="line">spring.cloud.config.server.git.uri=https://github.com/lw900925/springcloud-config-repository.git</span><br><span class="line">spring.cloud.config.server.git.search-paths=base-service</span><br><span class="line">#spring.cloud.config.server.git.username=username</span><br><span class="line">#spring.cloud.config.server.git.password=password</span><br><span class="line">spring.cloud.config.server.git.timeout=60</span><br><span class="line"></span><br><span class="line">spring.cloud.config.server.git.repos.prod.uri=https://gitlab.com/lw900925/springcloud-config-repository.git</span><br><span class="line">spring.cloud.config.server.git.repos.prod.pattern=*prod*</span><br><span class="line">spring.cloud.config.server.git.repos.prod.searchPaths=base-service</span><br><span class="line">spring.cloud.config.server.git.repos.prod.timeout=60</span><br></pre></td></tr></table></figure>
+<p>通过<code>spring.cloud.config.server.git.repos.*</code>配置不同的仓库，上述配置文件中添加了一个<code>prod</code>的库作为生产环境的Github库，当获取<code>prod</code>环境的配置文件时，Config Server首先会在该库中获取配置文件，如果没有获取到，就会进入默认的库中获取。</p>
+<h2 id="安全配置"><a href="#安全配置" class="headerlink" title="安全配置"></a>安全配置</h2><p>由于Config Server中的配置文件信息比较敏感，如果没有做限制，任何人可以通过Config Server获取配置信息，会有很大隐患。配置Config Server以安全方式访问有很多种方法，如OAuth2.0认证，防火墙白名单等，这里推荐使用Spring Security项目，他可以和Spring Boot项目无缝整合。</p>
+<h3 id="Config-Server配置"><a href="#Config-Server配置" class="headerlink" title="Config Server配置"></a>Config Server配置</h3><p>在<code>springcloud-config-server</code>项目中的<code>build.gradle</code>文件添加<code>spring-boot-starter-security</code>依赖：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">dependencies &#123;</span><br><span class="line">    compile(<span class="string">'org.springframework.boot:spring-boot-starter-security'</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Spring Security默认使用HTTP Basic方式认证，当启动Config Server时，可以在控制台看到如下日志信息：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">2017-08-15 16:19:27.319  INFO 13720 --- [           main] b.a.s.AuthenticationManagerConfiguration : </span><br><span class="line"></span><br><span class="line">Using default security password: 5cd88fb5-0f77-4560-a3fe-7815f742862b</span><br></pre></td></tr></table></figure>
+<p>此时通过浏览器访问Config Server会提示输入用户名和密码，用户名默认为<code>user</code>，密码即上面日志中输出的UUID，每次重新启动Config Server时会重新生成，如果不希望每次启动Config Server都重新生成密码，可以在<code>application.properties</code>中修改：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">security.user.name=spring</span><br><span class="line">security.user.password=password</span><br></pre></td></tr></table></figure>
+<h3 id="Config-Client配置"><a href="#Config-Client配置" class="headerlink" title="Config Client配置"></a>Config Client配置</h3><p>在<code>springcloud-file-service</code>项目的<code>bootstrap.properties</code>文件中添加Config Server的认证信息：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">spring.cloud.config.username=user</span><br><span class="line">spring.cloud.config.password=password</span><br></pre></td></tr></table></figure>
+<h2 id="加密-解密"><a href="#加密-解密" class="headerlink" title="加密/解密"></a>加密/解密</h2><p>一些敏感的配置信息（如数据库连接信息）如果以明文方式存放在配置文件中，一旦泄露，将会造成不可挽回的损失。Config Server支持配置信息加密，加密后以密文存储在配置文件中，保证配置信息的安全。</p>
+<p>使用加密/解密特性需要JCE（Java Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy Files）的支持，默认的JCE在Sun的jre版本中自带，不过有长度限制，使用时可能会抛出<code>java.security.InvalidKeyException: Illegal key size</code>异常信息，所以我们需要安装Oracle提供的不限长度的JCE，下载传送门：</p>
+<ul>
+<li><a href="http://www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html" target="_blank" rel="noopener">Java 6 JCE</a></li>
+<li><a href="http://www.oracle.com/technetwork/java/javase/downloads/jce-7-download-432124.html" target="_blank" rel="noopener">Java 7 JCE</a></li>
+<li><a href="http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html" target="_blank" rel="noopener">Java 8 JCE</a></li>
+</ul>
+<p>请根据所使用的JDK版本对号入座，下载后是一个zip包，解压到JDK安装目录下<code>/jre/lib/security</code>目录中覆盖原来的即可。</p>
+<p>安装好JCE后，可以开启Config Server，在控制台中查看启动日志，可以发现加密/解密的相关端点（Endpoint）：</p>
+<ul>
+<li><code>[/encrypt],methods=[POST]</code></li>
+<li><code>[/encrypt/{name}/{profiles}],methods=[POST]</code></li>
+<li><code>[/decrypt/{name}/{profiles}],methods=[POST]</code></li>
+<li><code>[/decrypt],methods=[POST]</code></li>
+<li><code>[/encrypt/status],methods=[GET]</code></li>
+<li><code>[/key],methods=[GET]</code></li>
+<li><code>[/key/{name}/{profiles}],methods=[GET]</code></li>
+</ul>
+<p>此时如果访问<code>/encrypt/status</code>端点会返回如下信息：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="attr">"description"</span>: <span class="string">"No key was installed for encryption service"</span>,</span><br><span class="line">    <span class="attr">"status"</span>: <span class="string">"NO_KEY"</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这是因为没有配置密钥，在<code>application.properties</code>配置文件中添加加密的密钥：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">encrypt.key=config_server_key</span><br></pre></td></tr></table></figure>
+<p>添加完成后再次访问<code>/encrypt/status</code>端点，显示加密功能可用：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="attr">"status"</span>: <span class="string">"OK"</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>现在访问加密解密端点查看能否正常加解密：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">curl http://user:password@localhost:8888/encrypt -d password</span><br><span class="line">7b113712cc107539d41c4e4343e13da38411f2c66d916841a273eb58a6585818</span><br><span class="line"></span><br><span class="line">curl http://user:password@localhost:8888/decrypt -d 7b113712cc107539d41c4e4343e13da38411f2c66d916841a273eb58a6585818</span><br><span class="line">password</span><br></pre></td></tr></table></figure>
+<p>除了使用密钥加密外，Config Server还支持证书加密，这种加密方式使用起来有点复杂，但比使用密钥的方式更安全。首先，需要用JDK自带的<code>keytool</code>命令生成证书：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">keytool -genkeypair -alias spring-cloud-config-server -keyalg RSA \</span><br><span class="line">  -dname &quot;CN=zh-CN, OU=spring.io, O=spring, L=Shanghai, S=Shanghai, C=CN&quot; \</span><br><span class="line">  -keypass 123456 -keystore .keystore -storepass 123456</span><br></pre></td></tr></table></figure>
+<p>默认会在当前用户目录下生成<code>.keystore</code>证书文件，将该文件拷贝到<code>springcloud-config-server</code>项目的<code>/src/main/resources</code>目录下，然后在<code>application.properties</code>中添加以下配置：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">encrypt.key-store.location=classpath:.keystore</span><br><span class="line">encrypt.key-store.alias=spring-cloud-config-server</span><br><span class="line">encrypt.key-store.password=123456</span><br><span class="line">encrypt.key-store.secret=123456</span><br></pre></td></tr></table></figure>
+<p>重新启动Config Server，访问加密解密端点：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">curl http://user:password@localhost:8888/encrypt -d password</span><br><span class="line">AQBp7YRFbAyDkoVtrxymRrmhzfLfxuVIfvhLHcRT/uRbfJn87TRkwds509uq7BbMxGn2xqCTeLNguN0uBHxVHETlHsh8PabJuVwZAsRFw0Q9nXbU+KdLiaUroLIbtqpQgKltzq91lsKSciXauX5JGzOqgkJhy81UfCgJFeR4m3EmWm8b/EV8Bs0KVekkHCMyyxZwja2wABDyd9BRX4mMCzNuFQ5bHT3RKhgbFWuwewSJC3dFhmLhUYczuT2xqTm/0rp6+zq22tugr9ils9814p2JGpz8o+fQc86i6nOzWKl2+ab3E3aLdG/7tMWHhv6mEmO5/dvcqFz4BHdeN6slsNaWedrxO9hkcWlK7nxwIKLVahutN42n+8a1hg3A+lsp8PY=</span><br><span class="line"></span><br><span class="line">curl http://user:password@localhost:8888/decrypt -d AQBp7YRFbAyDkoVtrxymRrmhzfLfxuVIfvhLHcRT/uRbfJn87TRkwds509uq7BbMxGn2xqCTeLNguN0uBHxVHETlHsh8PabJuVwZAsRFw0Q9nXbU+KdLiaUroLIbtqpQgKltzq91lsKSciXauX5JGzOqgkJhy81UfCgJFeR4m3EmWm8b/EV8Bs0KVekkHCMyyxZwja2wABDyd9BRX4mMCzNuFQ5bHT3RKhgbFWuwewSJC3dFhmLhUYczuT2xqTm/0rp6+zq22tugr9ils9814p2JGpz8o+fQc86i6nOzWKl2+ab3E3aLdG/7tMWHhv6mEmO5/dvcqFz4BHdeN6slsNaWedrxO9hkcWlK7nxwIKLVahutN42n+8a1hg3A+lsp8PY=</span><br><span class="line">password</span><br></pre></td></tr></table></figure>
+<p>现在可以将加密后的密文存储在配置文件中，密文在配置文件中需要以<code>{cipher}</code>标记开头，Config Server在获取到配置文件时检查变量值如果以<code>{cipher}</code>开头，就认为是一段密文，会对其进行解密。这里可以为<code>springcloud-file-service</code>配置数据库的密码：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"># Spring datasource</span><br><span class="line">spring.datasource.url=jdbc:mysql://localhost:3306/file-service</span><br><span class="line">spring.datasource.username=root</span><br><span class="line">spring.datasource.password=&#123;cipher&#125;AQBrf7mTx037Xt6r6gKV0LO63RdZJSMHyVDgE9hQqb9ZUtij9XtW0ZSFaD1oiCmSVBTNtU8/0yXnahwuOS2sWptOAdPRLkXwG3BjZFuOt50cV/wiU6OkdShPshsOEHgI7OSWXjXqpv57JyptgId91iFx7eRyQARaYZKlJenh5RCdDGGiBD+cf41d3EtuuEp3IiWnw9zA9QplTjnO3+zgWgRvAPPtcqt0sII9Fk62241w+TPrPxHeJK+HKnoqFG+DJGvTC9PxNqWD1i/v5dFEpse4TSWUMpqXJsi3y+JUTcL+rBwR+I9NoOS81EA4R1sFBrocpFi43rEltG4wppES5ZBREnz+SdHWYa8RzFDajXP38tjFu6lmZj5sCjLxsY7+o18=</span><br></pre></td></tr></table></figure>
+<p>将配置文件推送到远程Git仓库，启动Config Server即可。</p>
+<h2 id="动态刷新配置"><a href="#动态刷新配置" class="headerlink" title="动态刷新配置"></a>动态刷新配置</h2><p>有时候我们修改某个微服务的配置文件，推送到远程Git仓库，然后将该微服务重新启动，以便让它从Config Server获取最新的配置文件，但如果改为服务是集群部署（比如有10个实例的集群），逐个重启的做法效率太低。好在Spring Cloud Config为我们提供了动态刷新某个微服务配置的支持，只要在该微服务上访问刷新配置的端点即可。</p>
+<p>动态刷新需要添加<code>spring-boot-starter-actuator</code>依赖，在<code>springcloud-file-service</code>项目中<code>build.gradle</code>添加如下依赖：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">dependencies &#123;</span><br><span class="line">    compile(<span class="string">'org.springframework.boot:spring-boot-starter-actuator'</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>启动<code>springcloud-file-service</code>项目后在控制台查看启动日志可以发现多了一个<code>/refresh</code>的端点，该端点就是刷新配置，首先我们访问<code>/env.json</code>端点查看远程仓库的配置信息：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="attr">"profiles"</span>: [</span><br><span class="line">        <span class="string">"dev"</span></span><br><span class="line">    ],</span><br><span class="line">    <span class="attr">"server.ports"</span>: &#123;</span><br><span class="line">        <span class="attr">"local.server.port"</span>: <span class="string">"8000"</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">"configService:https://github.com/lw900925/springcloud-config-repository.git/base-service/springcloud-file-service-dev.properties"</span>: &#123;</span><br><span class="line">        <span class="attr">"spring.datasource.username"</span>: <span class="string">"root"</span>,</span><br><span class="line">        <span class="attr">"spring.profiles.active"</span>: <span class="string">"dev"</span>,</span><br><span class="line">        <span class="attr">"spring.datasource.url"</span>: <span class="string">"jdbc:mysql://localhost:3306/file-service"</span>,</span><br><span class="line">        <span class="attr">"spring.application.name"</span>: <span class="string">"springcloud-file-service"</span>,</span><br><span class="line">        <span class="attr">"spring.datasource.password"</span>: <span class="string">"******"</span></span><br><span class="line">    &#125;,</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 以下信息省略</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>修改<code>spring.datasource.url</code>为<code>jdbc:mysql://127.0.0.1:3306/file-service</code>，并推送到远程Git仓库，然后访问<code>springcloud-file-service</code>的<code>/refresh</code>端点：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[<span class="string">"spring.datasource.url"</span>]</span><br></pre></td></tr></table></figure>
+<p>输出信息表示<code>spring.datasource.url</code>的值已刷新，再次请求<code>/env.json</code>端点：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="attr">"profiles"</span>: [</span><br><span class="line">        <span class="string">"dev"</span></span><br><span class="line">    ],</span><br><span class="line">    <span class="attr">"server.ports"</span>: &#123;</span><br><span class="line">        <span class="attr">"local.server.port"</span>: <span class="string">"8000"</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">"configService:https://github.com/lw900925/springcloud-config-repository.git/base-service/springcloud-file-service-dev.properties"</span>: &#123;</span><br><span class="line">        <span class="attr">"spring.datasource.username"</span>: <span class="string">"root"</span>,</span><br><span class="line">        <span class="attr">"spring.profiles.active"</span>: <span class="string">"dev"</span>,</span><br><span class="line">        <span class="attr">"spring.datasource.url"</span>: <span class="string">"jdbc:mysql://127.0.0.1:3306/file-service"</span>,</span><br><span class="line">        <span class="attr">"spring.application.name"</span>: <span class="string">"springcloud-file-service"</span>,</span><br><span class="line">        <span class="attr">"spring.datasource.password"</span>: <span class="string">"******"</span></span><br><span class="line">    &#125;,</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 以下信息省略</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到<code>spring.datasource.url</code>值已经变成修改后的值，这期间<code>springcloud-file-service</code>没有重启，即实现了配置热加载。</p>
+<h2 id="自动推送配置"><a href="#自动推送配置" class="headerlink" title="自动推送配置"></a>自动推送配置</h2><p>前面介绍了在不重启微服务的情况下刷新配置文件，不过这种方式依然比较繁琐，即使不重启微服务，也是需要手动请求每个微服务的<code>/refresh</code>端点，如果集群中运行的实例较多，这种操作枯燥而又费时，也许可以使用脚本批量操作，不过Spring Cloud Config为我们提供了更自动化的方式。</p>
+<p>自动推送配置需要配合Spring Cloud Bus项目实现，Spring Cloud Bus为微服务提供消息总线功能，关于Spring Cloud Bus项目将在后面的文章中做详细介绍，这里我们可以先用起来。整个流程大致如下：</p>
+<p>Spring Cloud Bus有两种实现，RabbitMQ和Kafka，此处选用RabbitMQ作为实现，需要分别在<code>springcloud-config-server</code>和<code>springcloud-file-service</code>项目中添加依赖：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">dependencies &#123;</span><br><span class="line">    compile(<span class="string">'org.springframework.cloud:spring-cloud-starter-bus-amqp'</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>然后分别修改两个项目的<code>application.properties</code>配置文件，添加RabbitMQ配置（需要安装RabbitMQ，具体请参考RabbitMQ官方文档）：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"># Spring RabbitMQ</span><br><span class="line">spring.rabbitmq.host=10.145.4.171</span><br><span class="line">spring.rabbitmq.port=5672</span><br><span class="line">spring.rabbitmq.username=guest</span><br><span class="line">spring.rabbitmq.password=guest</span><br><span class="line">spring.rabbitmq.virtual-host=/</span><br></pre></td></tr></table></figure>
+<p>最后重启两个项目，发现启动日志中新增了<code>/bus/refresh</code>端点，该端点接受一个<code>destination</code>作为参数，<code>destination</code>是配置文件中<code>spring.application.name</code>的值，请求格式为：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">POST http://user:password@localhost:8888/bus/refresh?destination=springcloud-file-service:**</span><br><span class="line">POST http://user:password@localhost:8888/bus/refresh?destination=springcloud-file-service:8000</span><br></pre></td></tr></table></figure>
+<p><code>destination</code>指定某个微服务的名称，如果只刷新某几个实例的配置，直接指定端口号即可，<code>**</code>表示刷新所有微服务实例的配置。</p>
+<p>一些代码仓库服务（如Gitlab、Githun、Bitbucket等）都提供了发送通知消息的功能（通过webhook实现），当本地仓库的变更推送到远程仓库时，远程仓库会发送请求到指定的URL中，该URL通常是Config Server的地址。当Config Server接收到远程仓库发送的请求，会对其进行解析，然后更新微服务的配置。</p>
+<p>要让自动推送的功能正常运行，需要在<code>springcloud-config-server</code>项目添加<code>spring-cloud-config-monitor</code>依赖：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">dependencies &#123;</span><br><span class="line">    compile(<span class="string">'org.springframework.cloud:spring-cloud-config-monitor'</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>添加完成后重启Config Server，可以在启动日志中看到新增<code>/monitor</code>端点，该端点就是接收Git远程仓库通知的端点。由于Config Server配置了Spring Security的安全认证，还需要在<code>application.properties</code>中添加配置让Spring Security排除掉<code>/monitor</code>端点：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">security.ignored=/monitor</span><br></pre></td></tr></table></figure>
+<p>然后在Git仓库中配置webhook的Payload URL为<code>http://112.65.18.61:8000/monitor</code>（如何配置wenhook请自行Google or Baidu），并确保勾选Push events。</p>
+<p>如果不想排除<code>/monitor</code>端点，也可以将验证信息配置在Payload URL中，例如<code>http://user:password@112.65.18.61:8000/monitor</code>（不太推荐这种做法）。</p>
+<blockquote>
+<p><strong> 注意 </strong>：Playload URL指向Config Server的服务，请将该服务的IP和端口映射到外网，确保Github或Gitlab可以访问到。如果使用自建的Gitlab，也请确保该URL能被Gitlab访问到。</p>
+</blockquote>
+<p>最后，附上项目源码地址：</p>
+<ul>
+<li>spring-cloud：<a href="https://github.com/lw900925/springcloud" target="_blank" rel="noopener">https://github.com/lw900925/springcloud</a></li>
+<li>spring-cloud-config-repository (github): <a href="https://github.com/lw900925/springcloud-config-repository" target="_blank" rel="noopener">https://github.com/lw900925/springcloud-config-repository</a></li>
+<li>spring-cloud-config-repository (gitlab): <a href="https://gitlab.com/lw900925/springcloud-config-repository" target="_blank" rel="noopener">https://gitlab.com/lw900925/springcloud-config-repository</a></li>
+</ul>
+<p>如果有疑问，请在下方评论区参与讨论。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/docker/docker-compose-getting-started.html" rel="next" title="Docker：容器编排利器Compose（起步篇）">
+                <i class="fa fa-chevron-left"></i> Docker：容器编排利器Compose（起步篇）
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/spring-cloud/spring-cloud-eureka.html" rel="prev" title="Spring Cloud 微服务：Spring Cloud Eureka">
+                Spring Cloud 微服务：Spring Cloud Eureka <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div id="lv-container" data-id="city" data-uid="MTAyMC8yODgxNC81Mzg0"></div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="/uploads/avatar.jpg" alt="大猫">
+          <p class="site-author-name" itemprop="name">大猫</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">13</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">4</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/lw900925" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/u/2644358083" target="_blank" title="Weibo">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  Weibo
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Spring-Cloud-Config简介"><span class="nav-number">1.</span> <span class="nav-text">Spring Cloud Config简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#快速开始"><span class="nav-number">2.</span> <span class="nav-text">快速开始</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#构建Config-Server"><span class="nav-number">2.1.</span> <span class="nav-text">构建Config Server</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#准备配置文件"><span class="nav-number">2.2.</span> <span class="nav-text">准备配置文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#构建Config-Client"><span class="nav-number">2.3.</span> <span class="nav-text">构建Config Client</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Config-Server多仓库支持"><span class="nav-number">3.</span> <span class="nav-text">Config Server多仓库支持</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#安全配置"><span class="nav-number">4.</span> <span class="nav-text">安全配置</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Config-Server配置"><span class="nav-number">4.1.</span> <span class="nav-text">Config Server配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Config-Client配置"><span class="nav-number">4.2.</span> <span class="nav-text">Config Client配置</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#加密-解密"><span class="nav-number">5.</span> <span class="nav-text">加密/解密</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#动态刷新配置"><span class="nav-number">6.</span> <span class="nav-text">动态刷新配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#自动推送配置"><span class="nav-number">7.</span> <span class="nav-text">自动推送配置</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy;  2016 - 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-copyright"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">大猫</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+    <script type="text/javascript">
+      (function(d, s) {
+        var j, e = d.getElementsByTagName(s)[0];
+        if (typeof LivereTower === 'function') { return; }
+        j = d.createElement(s);
+        j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+        j.async = true;
+        e.parentNode.insertBefore(j, e);
+      })(document, 'script');
+    </script>
+  
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length == 0) {
+      search_path = "search.xml";
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.popup').toggle();
+    }
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+      $.ajax({
+        url: path,
+        dataType: "xml",
+        async: true,
+        success: function( xmlResponse ) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = $( "entry", xmlResponse ).map(function() {
+            return {
+              title: $( "title", this ).text(),
+              content: $("content",this).text(),
+              url: $( "url" , this).text()
+            };
+          }).get();
+          var $input = document.getElementById(search_id);
+          var $resultContent = document.getElementById(content_id);
+          $input.addEventListener('input', function(){
+            var matchcounts = 0;
+            var str='<ul class=\"search-result-list\">';
+            var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+            $resultContent.innerHTML = "";
+            if (this.value.trim().length > 1) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var content_index = [];
+                var data_title = data.title.trim().toLowerCase();
+                var data_content = data.content.trim().replace(/<[^>]+>/g,"").toLowerCase();
+                var data_url = decodeURIComponent(data.url);
+                var index_title = -1;
+                var index_content = -1;
+                var first_occur = -1;
+                // only match artiles with not empty titles and contents
+                if(data_title != '') {
+                  keywords.forEach(function(keyword, i) {
+                    index_title = data_title.indexOf(keyword);
+                    index_content = data_content.indexOf(keyword);
+                    if( index_title >= 0 || index_content >= 0 ){
+                      isMatch = true;
+                      if (i == 0) {
+                        first_occur = index_content;
+                      }
+                    }
+
+                  });
+                }
+                // show search results
+                if (isMatch) {
+                  matchcounts += 1;
+                  str += "<li><a href='"+ data_url +"' class='search-result-title'>"+ data_title +"</a>";
+                  var content = data.content.trim().replace(/<[^>]+>/g,"");
+                  if (first_occur >= 0) {
+                    // cut out 100 characters
+                    var start = first_occur - 20;
+                    var end = first_occur + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if(start == 0){
+                      end = 50;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    var match_content = content.substring(start, end);
+                    // highlight all keywords
+                    keywords.forEach(function(keyword){
+                      var regS = new RegExp(keyword, "gi");
+                      match_content = match_content.replace(regS, "<b class=\"search-keyword\">"+keyword+"</b>");
+                    });
+
+                    str += "<p class=\"search-result\">" + match_content +"...</p>"
+                  }
+                  str += "</li>";
+                }
+              })};
+            str += "</ul>";
+            if (matchcounts == 0) { str = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>' }
+            if (keywords == "") { str = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>' }
+            $resultContent.innerHTML = str;
+          });
+          proceedsearch();
+        }
+      });}
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched == false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(function(e){
+      $('.popup').hide();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    });
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
